@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>Budgetplaner</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div class="container">
+    <h1>Budgetplaner</h1>
+    <p>Ein einfacher Prototyp zur Verwaltung von Einnahmen und Ausgaben.</p>
+
+    <div class="card">
+      <h2>Übersicht</h2>
+      <p>Budget: <strong>CHF 2'800</strong></p>
+      <p>Ausgaben: <strong>CHF 1'250</strong></p>
+      <p>Verfügbar: <strong>CHF 1'550</strong></p>
+    </div>
+
+    <div class="card">
+      <h2>Neue Ausgabe erfassen</h2>
+      <input type="text" placeholder="Beschreibung">
+      <input type="number" placeholder="Betrag in CHF">
+      <button onclick="speichern()">Speichern</button>
+    </div>
+
+    <div class="card">
+      <h2>Kategorien</h2>
+      <ul>
+        <li>Miete / Wohnen</li>
+        <li>Essen</li>
+        <li>Freizeit</li>
+        <li>Sparen</li>
+        <li>Transport</li>
+      </ul>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
