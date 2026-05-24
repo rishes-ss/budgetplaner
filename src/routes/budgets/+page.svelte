@@ -71,8 +71,8 @@
               id="limit"
               name="limit"
               type="number"
-              min="1"
-              step="10"
+              min="0.01"
+              step="any"
               required
               placeholder="300"
               value={form?.values?.limit ?? ''}

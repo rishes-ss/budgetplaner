@@ -68,7 +68,7 @@
             <div class="form-row">
               <div class="form-group">
                 <label for="edit-amount">Betrag (CHF)</label>
-                <input id="edit-amount" name="amount" type="number" min="0.01" step="0.05" value={editing.amount} required placeholder="0.00" />
+                <input id="edit-amount" name="amount" type="number" min="0.01" step="any" value={editing.amount} required placeholder="0.00" />
                 {#if formErrors.amount}<span class="error-msg">{formErrors.amount}</span>{/if}
               </div>
               <div class="form-group">
@@ -109,7 +109,7 @@
             <div class="form-row">
               <div class="form-group">
                 <label for="amount">Betrag (CHF)</label>
-                <input id="amount" name="amount" type="number" min="0.01" step="0.05" value={formValues.amount ?? ''} required placeholder="0.00" />
+                <input id="amount" name="amount" type="number" min="0.01" step="any" value={formValues.amount ?? ''} required placeholder="0.00" />
                 {#if formErrors.amount}<span class="error-msg">{formErrors.amount}</span>{/if}
               </div>
               <div class="form-group">

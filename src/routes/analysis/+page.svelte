@@ -1,4 +1,6 @@
 <script>
+  import StatCard from '$lib/components/StatCard.svelte';
+
   export let data;
 
   $: tx = data.transactions;
@@ -72,28 +74,51 @@
 
     <!-- KPI Row -->
     <div class="grid-4" style="margin-bottom: 28px">
-      <div class="card stat-card">
-        <p class="stat-label">Einnahmen</p>
-        <p class="stat-value positive">{chf(income)}</p>
-        <p class="stat-sub">Gesamt</p>
-      </div>
-      <div class="card stat-card">
-        <p class="stat-label">Ausgaben</p>
-        <p class="stat-value negative">{chf(expenses)}</p>
-        <p class="stat-sub">Gesamt</p>
-      </div>
-      <div class="card stat-card">
-        <p class="stat-label">Saldo</p>
-        <p class="stat-value" class:positive={balance >= 0} class:negative={balance < 0}>{chf(balance)}</p>
-        <p class="stat-sub">Einnahmen − Ausgaben</p>
-      </div>
-      <div class="card stat-card">
-        <p class="stat-label">Sparquote</p>
-        <p class="stat-value" class:positive={savingsRate >= 20} class:warning={savingsRate > 0 && savingsRate < 20} class:negative={savingsRate < 0}>
-          {savingsRate}%
-        </p>
-        <p class="stat-sub">des Einkommens</p>
-      </div>
+      <StatCard
+        label="Einnahmen"
+        value={chf(income)}
+        sub="Gesamt"
+        color="positive"
+      >
+        <svelte:fragment slot="icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+        </svelte:fragment>
+      </StatCard>
+
+      <StatCard
+        label="Ausgaben"
+        value={chf(expenses)}
+        sub="Gesamt"
+        color="negative"
+      >
+        <svelte:fragment slot="icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/></svg>
+        </svelte:fragment>
+      </StatCard>
+
+      <StatCard
+        label="Saldo"
+        value={chf(balance)}
+        sub="Einnahmen − Ausgaben"
+        color={balance >= 0 ? 'positive' : 'negative'}
+      >
+        <svelte:fragment slot="icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        </svelte:fragment>
+      </StatCard>
+
+      <StatCard
+        label="Sparquote"
+        value="{savingsRate}%"
+        sub="des Einkommens"
+        color={savingsRate >= 20 ? 'positive' : savingsRate > 0 ? 'warning' : 'negative'}
+        trend={savingsRate >= 20 ? 'Sehr gut' : savingsRate > 0 ? 'Ausbaufähig' : 'Negativ'}
+        trendDir={savingsRate >= 20 ? 'up' : savingsRate > 0 ? 'neutral' : 'down'}
+      >
+        <svelte:fragment slot="icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 1 0 10 10"/><path d="M12 6v6l4 2"/><path d="M22 2l-5 5"/><path d="M17 2h5v5"/></svg>
+        </svelte:fragment>
+      </StatCard>
     </div>
 
     <div class="analysis-grid">
@@ -200,32 +225,6 @@
 </div>
 
 <style>
-  .stat-card {
-    padding: 20px;
-  }
-
-  .stat-label {
-    font-size: 0.75rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: var(--text-3);
-    margin: 0;
-  }
-
-  .stat-value {
-    font-size: 1.5rem;
-    font-weight: 800;
-    line-height: 1.15;
-    margin: 6px 0 2px;
-  }
-
-  .stat-sub {
-    font-size: 0.78rem;
-    color: var(--text-3);
-    margin: 0;
-  }
-
   .analysis-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
