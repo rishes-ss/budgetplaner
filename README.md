@@ -32,7 +32,7 @@ Viele Studierende und junge Erwachsene haben keinen guten Überblick über ihre 
   - Schnellen visuellen Überblick über den Finanzzustand bieten
   - Bei Budgetüberschreitungen aktiv warnen und Empfehlungen geben
 - **Primäre Zielgruppe:** Studierende und junge Erwachsene (18–28 Jahre) mit begrenztem monatlichem Budget, die einen einfachen Einstieg in die persönliche Finanzverwaltung suchen.
-- **Weitere Stakeholder:** [TODO: z.B. Kursleitung, Testpersonen aus dem Umfeld]
+- **Weitere Stakeholder:** Familien (zukünftig), die einen gemeinsamen Budgetüberblick benötigen; sowie KMUs (zukünftig), die eine einfache interne Budgetplanung suchen.
 
 ---
 
@@ -64,18 +64,42 @@ Die Durchführung erfolgt phasenbasiert; dokumentiert sind die wichtigsten Ergeb
   - Bestehende Apps (z.B. Bankapp-Auswertungen) sind oft zu komplex oder zu wenig auf persönliche Budgets ausgerichtet
   - Kategorisierung von Ausgaben ist zentrales Bedürfnis
   - Wichtig: unmittelbares Feedback, wenn ein Budget überschritten wird
-  - [TODO: weitere Erkenntnisse aus eigener Recherche / Interviews ergänzen]
 
 ### 3.2 Sketch
 
-- **Variantenüberblick:** [TODO: kurze Beschreibung der verschiedenen Konzeptvarianten, die skizziert wurden]
-- **Skizzen:** [TODO: Skizzen/Fotos der Papier-Wireframes einfügen oder verlinken. Unterschiede zwischen den Varianten kurz beschreiben]
+- **Variantenüberblick:** Auf einem einzigen Papier-Sketch wurden mehrere Konzeptvarianten und UI-Bereiche parallel skizziert und gegeneinander abgewogen. Die Ideen umfassten: eine kompakte Hauptansicht mit Ausgaben-Schnellerfassung, eine Plan/Ziele-Ansicht mit Sparzielen (prozentual), einen Budgetrechner (Einnahmen minus Fixkosten), eine Kuchendiagramm-Übersicht und eine einfache Login-/Registrierungs-Seite.
+
+- **Skizzen:**
+
+  ![Papier-Skizze der Konzeptvarianten](docs/sketch.jpg)
+  *(Papier-Skizze mit 6 Konzeptbereichen auf einem Blatt — Bild bitte ins Verzeichnis `docs/` ablegen)*
+
+  Die Skizze zeigt folgende Varianten und Ideen:
+  - **Dashboard-Variante:** Gesamtübersicht mit Ausgaben-Anzeige (CHF), direkter Schnellerfassung „Neue Ausgabe" (Kategorie + Betrag) und Button „Neue Ausgabe erfassen"
+  - **Plan/Ziele-Variante:** Zwei Tabs (Plan | Ziele) — im Plan-Tab kategorienbasierte Budgets (z.B. Essen 150 CHF max, Shopping 200 CHF max), im Ziele-Tab prozentuale Sparziele (z.B. Auto 50%, Neues Handy 120%)
+  - **Budgetrechner-Variante:** Eingabeformular für Einnahmen und Fixkosten mit „Budgetberechnen"-Button — automatische Berechnung des verfügbaren Restbudgets
+  - **Übersicht-Variante:** Kuchendiagramm zur Visualisierung der Ausgaben nach Kategorie (Essen, Freizeit etc.) mit Monatsfilter
+  - **Restbetrag-Variante:** Einfache Listenansicht pro Kategorie (z.B. Freizeit 100 CHF übrig, Essen 10 CHF übrig)
+  - **Authentifizierung:** Login- und Registrierungs-Screen (Create new acc)
 
 ### 3.3 Decide
 
-- **Gewählte Variante & Begründung:** [TODO: welche Variante wurde gewählt und warum? Entscheidungskriterien nennen]
-- **End-to-End-Ablauf:** Der typische Nutzerfluss beginnt mit der Registrierung, führt über das Dashboard zur Transaktionserfassung, dann zur Budgetverwaltung und schliesslich zur Analyse-Seite für die Auswertung.
-- **Mockup:** [TODO: Figma-Link oder Screenshots des Mockups einfügen]
+- **Gewählte Variante & Begründung:** Gewählt wurde die Dashboard-zentrierte Variante mit kategorienbased Budgets (Plan-Tab). Die Sparziele-Variante wurde als zu komplex für einen ersten Prototyp eingestuft. Der Budgetrechner-Ansatz wurde in vereinfachter Form ins Dashboard integriert (Saldo-Karte). Entscheidend war, dass Nutzende auf der Startseite sofort den Überblick haben, ohne erst navigieren zu müssen.
+
+- **End-to-End-Ablauf:** Der typische Nutzerfluss beginnt mit der Registrierung (`/register`), führt über das Dashboard zur Transaktionserfassung (`/transactions`), dann zur Budgetverwaltung (`/budgets`) und schliesslich zur Analyse-Seite (`/analysis`) für die Auswertung. Von überall aus ist die Navigation persistent zugänglich.
+
+- **Mockup:** [Figma-Mockup öffnen](https://www.figma.com/design/RItQief8ls681HBYnT90af/BudgetPlaner?node-id=0-1&m=dev&t=KSmjbjGpSJ852lRW-1)
+
+  Das Mockup zeigt 4 mobile Screens:
+
+  ![Figma Mockup – 4 Screens](docs/mockup.png)
+
+  | Screen | Inhalt |
+  |---|---|
+  | **Dashboard** | Gesamtbudget CHF 4'500, Ausgegeben CHF 3'000, Restbetrag CHF 1'500; Buttons: + Ausgabe, Restbetrag, Übersicht |
+  | **Neue Ausgabe erfassen** | Formular mit Kategorie (z.B. Essen) und Betrag (CHF 30), Button „Speichern" |
+  | **Restbeträge** | Kategorieliste mit verbliebenem Budget (Essen CHF 70, Shopping CHF 50, Sonstiges CHF 40) |
+  | **Übersicht** | Monatliche Ausgaben nach Kategorie (April: Essen CHF 200, Shopping CHF 500, Sonstiges CHF 160) |
 
 ### 3.4 Prototype
 
@@ -147,7 +171,7 @@ Fasst die technische Realisierung zusammen.
   - Kein öffentliches API — Datenaustausch erfolgt über SvelteKit Form Actions und Load-Funktionen.
   - Umgebungsvariablen: `MONGODB_URI` (in `.env`, nicht im Repository)
 
-- **Deployment:** [TODO: Netlify-URL der Live-Version eintragen]
+- **Deployment:** https://budgetplaner-final.netlify.app/
 
 - **Besondere Entscheidungen:**
   - Budget-Upsert: Existiert bereits ein Budget für eine Kategorie, wird es automatisch aktualisiert statt dupliziert (Upsert per case-insensitivem Regex-Match).
@@ -157,7 +181,7 @@ Fasst die technische Realisierung zusammen.
 
 ### 3.5 Validate
 
-- **URL der getesteten Version:** [TODO: Netlify-URL oder Deploy-Preview-URL]
+- **URL der getesteten Version:** https://budgetplaner-test-4c5d09.netlify.app/ *(separat deployte Testversion)*
 - **Ziele der Prüfung:**
   - Ist das Dashboard intuitiv verständlich ohne Erklärung?
   - Können Nutzende selbstständig eine Transaktion erfassen?
@@ -207,7 +231,7 @@ Fasst die technische Realisierung zusammen.
 
 ## 5. Projektorganisation
 
-- **Repository & Struktur:** [TODO: GitHub-Link einfügen] — Ordnerstruktur siehe Kapitel 3.4.2.
+- **Repository & Struktur:** https://github.com/rishes-ss/budgetplaner — Ordnerstruktur siehe Kapitel 3.4.2.
 - **Issue-Management:** [TODO: z.B. GitHub Issues oder informell via Notizen in VS Code]
 - **Commit-Praxis:** [TODO: z.B. sprechende Commits wie `feat: add budget recommendations`, `fix: session expiry check`]
 
