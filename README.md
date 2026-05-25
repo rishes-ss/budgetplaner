@@ -72,7 +72,6 @@ Die Durchführung erfolgt phasenbasiert; dokumentiert sind die wichtigsten Ergeb
 - **Skizzen:**
 
   ![Papier-Skizze der Konzeptvarianten](docs/sketch.png)
-  *(Papier-Skizze mit 6 Konzeptbereichen auf einem Blatt — Bild bitte ins Verzeichnis `docs/` ablegen)*
 
   Die Skizze zeigt folgende Varianten und Ideen:
   - **Dashboard-Variante:** Gesamtübersicht mit Ausgaben-Anzeige (CHF), direkter Schnellerfassung „Neue Ausgabe" (Kategorie + Betrag) und Button „Neue Ausgabe erfassen"
@@ -94,7 +93,7 @@ Die Durchführung erfolgt phasenbasiert; dokumentiert sind die wichtigsten Ergeb
 
   ![Figma Mockup – 4 Screens](docs/mockup.png)
 
-  | Screen | Inhalt |
+  | Screen | Beschreibung |
   |---|---|
   | **Dashboard** | Gesamtbudget CHF 4'500, Ausgegeben CHF 3'000, Restbetrag CHF 1'500; Buttons: + Ausgabe, Restbetrag, Übersicht |
   | **Neue Ausgabe erfassen** | Formular mit Kategorie (z.B. Essen) und Betrag (CHF 30), Button „Speichern" |
@@ -115,11 +114,24 @@ Beschreibt die Gestaltung und Interaktion des umgesetzten Prototyps.
   - `/login` / `/register` – Authentifizierung
 
 - **User Interface Design:**
-  - Das Dashboard zeigt vier KPI-Karten (Einnahmen, Ausgaben, Saldo, Budgetstatus) sowie die letzten Transaktionen und eine Budget-Fortschrittsübersicht.
-  - Die Transaktionsseite ist zweispaltig: links das Erfassungsformular, rechts die gefilterte Transaktionsliste mit Bearbeiten- und Löschen-Funktion.
-  - Die Budgetseite zeigt bei Überschreitungen automatisch Empfehlungen (z.B. „Kürze Kategorie X um CHF Y").
-  - Die Analyseseite enthält ein horizontales Balkendiagramm (Ausgaben nach Kategorie), ein vertikales Säulendiagramm (letzte 6 Monate) und eine Budget-vs.-Ist-Tabelle.
-  - [TODO: Screenshots der wichtigsten Screens einfügen]
+
+  **Dashboard** — vier KPI-Karten (Einnahmen, Ausgaben, Saldo, Budgetstatus), darunter die letzten Transaktionen und eine Budget-Fortschrittsübersicht pro Kategorie.
+
+  ![Dashboard](docs/dashboard.png)
+
+  **Transaktionen** — zweispaltiges Layout: links das Erfassungsformular (Titel, Betrag, Typ, Kategorie, Datum, Notiz), rechts die filterbare Transaktionsliste mit Bearbeiten- und Löschen-Funktion.
+
+  ![Transaktionen](docs/transaktionen.png)
+
+  **Budgets** — Budgetkarten pro Kategorie mit Fortschrittsbalken und Farbkodierung; bei Überschreitungen erscheint automatisch ein Empfehlungsblock.
+
+  ![Budgets](docs/budget.png)
+
+  **Analyse** — Ausgaben nach Kategorie (horizontales Balkendiagramm), Ausgaben nach Monat (Säulendiagramm, letzte 6 Monate), Budget-vs.-Ist-Tabelle und Top-Ausgaben-Liste.
+
+  ![Analyse – Diagramme](docs/analyse1.png)
+
+  ![Analyse – Tabelle & Top-Ausgaben](docs/analyse2.png)
 
 - **Designentscheidungen:**
   - Farbkodierung: Grün = positiv/im Rahmen, Orange = Warnung (80–99% des Budgets), Rot = Überschreitung (≥100%)
