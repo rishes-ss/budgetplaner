@@ -193,26 +193,42 @@ Fasst die technische Realisierung zusammen.
 
 ### 3.5 Validate
 
-- **URL der getesteten Version:** https://budgetplaner-test-4c5d09.netlify.app/ *(separat deployte Testversion)*
+Die getestete Version war ein separater, vereinfachter Prototyp (HTML/CSS/JavaScript) ohne Login, mit Demodaten. Screenshots der getesteten Version:
+
+![Test-Version Dashboard](docs/testDashboard.png)
+
+![Test-Version Transaktionen](docs/testTransaktionen.png)
+
 - **Ziele der Prüfung:**
   - Ist das Dashboard intuitiv verständlich ohne Erklärung?
   - Können Nutzende selbstständig eine Transaktion erfassen?
   - Werden Budgetüberschreitungen klar wahrgenommen?
   - Ist die Analyse-Seite verständlich und nützlich?
 
-- **Vorgehen:** [TODO: moderiert/unmoderiert; remote/on-site]
-- **Stichprobe:** [TODO: Anzahl Testpersonen, kurzes Profil — z.B. Studierende, 20–25 Jahre, keine Vorkenntnisse mit Budgetapps]
+- **Vorgehen:** Moderiert, on-site im Unterricht. Die Testpersonen führten die Aufgaben selbstständig durch, während Beobachtungen und Probleme schriftlich festgehalten wurden.
+
+- **Stichprobe:** 2 Studierende, 20–25 Jahre, keine Vorkenntnisse mit der App.
 
 - **Aufgaben/Szenarien:**
   1. „Du hast heute CHF 12.50 für das Mittagessen ausgegeben. Erfasse diese Ausgabe."
   2. „Überprüfe, ob du diesen Monat noch im Rahmen deines Essenbudgets bist."
   3. „Setze ein neues Monatsbudget von CHF 100 für die Kategorie Freizeit."
   4. „Schau dir an, in welcher Kategorie du am meisten Geld ausgibst."
-  5. [TODO: weitere Aufgaben ergänzen]
 
-- **Kennzahlen & Beobachtungen:** [TODO: Erfolgsquoten, Zeitbedarf, qualitative Findings aus dem Test]
-- **Zusammenfassung der Resultate:** [TODO: 2–4 Sätze zu den wichtigsten Erkenntnissen]
-- **Abgeleitete Verbesserungen:** [TODO: priorisierte Liste von Verbesserungen, die sich aus der Evaluation ergeben haben]
+- **Kennzahlen & Beobachtungen:**
+  - Beide Testpersonen haben alle vier Aufgaben erfolgreich abgeschlossen (Erfolgsquote 100%).
+  - **Finding 1:** Umlaute (ö, ä, ü) wurden nicht korrekt dargestellt — Wörter wie „Löschen" erschienen als „Loeschen". Führte zu Irritation.
+  - **Finding 2:** Die Buttons „Bearbeiten" und „Löschen" bei Transaktionen wurden als unelegant empfunden — Symbole/Icons wären intuitiver und platzsparender.
+  - **Finding 3:** Der Budgetstatus war nicht auf Anhieb erkennbar. Nutzende mussten Text lesen und interpretieren, bevor sie verstanden, ob sie im grünen Bereich sind. Mehr visuelle Farbkodierung wurde gewünscht.
+  - **Finding 4:** Kein Login in der Testversion — dies wurde als fehlende Funktion wahrgenommen.
+
+- **Zusammenfassung der Resultate:** Beide Testpersonen fanden sich schnell in der App zurecht und konnten alle Aufgaben ohne Hilfe lösen. Die Grundnavigation und die Kernfunktionen sind intuitiv. Verbesserungspotenzial liegt bei der visuellen Klarheit des Budgetstatus, der Darstellung von Aktions-Buttons sowie der korrekten Zeichencodierung (Umlaute).
+
+- **Abgeleitete Verbesserungen (umgesetzt im finalen Prototyp):**
+  1. **Umlaute behoben** — Im SvelteKit-Prototyp werden alle Sonderzeichen korrekt dargestellt.
+  2. **Icons statt Text** — Bearbeiten- und Löschen-Aktionen verwenden im finalen Prototyp Icon-Buttons (Stift / Mülleimer).
+  3. **Farbkodierung ausgebaut** — Budgetstatus wird durchgehend mit Grün/Orange/Rot signalisiert; Fortschrittsbalken und farbige Badges machen den Status auf einen Blick sichtbar.
+  4. **Login & Authentifizierung** — Der finale Prototyp verfügt über eine vollständige Registrierung und Session-basiertes Login.
 
 ---
 
