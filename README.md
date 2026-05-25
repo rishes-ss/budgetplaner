@@ -71,7 +71,7 @@ Die Durchführung erfolgt phasenbasiert; dokumentiert sind die wichtigsten Ergeb
 
 - **Skizzen:**
 
-  ![Papier-Skizze der Konzeptvarianten](docs/sketch.jpg)
+  ![Papier-Skizze der Konzeptvarianten](docs/sketch.png)
   *(Papier-Skizze mit 6 Konzeptbereichen auf einem Blatt — Bild bitte ins Verzeichnis `docs/` ablegen)*
 
   Die Skizze zeigt folgende Varianten und Ideen:
