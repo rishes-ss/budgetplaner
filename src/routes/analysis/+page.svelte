@@ -22,29 +22,34 @@
       .map(([category, amount]) => ({ category, amount }));
   })();
 
-  // Spending by month (last 6 months)
-  $: byMonth = (() => {
+  // Monthly comparison: income vs expenses for last 12 months
+  $: byMonthCompare = (() => {
     const map = {};
-    tx.filter((t) => t.type === 'expense').forEach((t) => {
+    tx.forEach((t) => {
       const key = t.date.slice(0, 7);
-      map[key] = (map[key] || 0) + t.amount;
+      if (!map[key]) map[key] = { income: 0, expenses: 0 };
+      if (t.type === 'income') map[key].income += t.amount;
+      else map[key].expenses += t.amount;
     });
     return Object.entries(map)
       .sort((a, b) => a[0].localeCompare(b[0]))
-      .slice(-6)
-      .map(([month, amount]) => ({ month, amount }));
+      .slice(-12)
+      .map(([month, d]) => ({ month, income: d.income, expenses: d.expenses, balance: d.income - d.expenses }));
   })();
 
   $: maxCat = byCategory.length > 0 ? byCategory[0].amount : 1;
-  $: maxMonth = byMonth.length > 0 ? Math.max(...byMonth.map((m) => m.amount)) : 1;
+  $: maxMonthVal = byMonthCompare.length > 0
+    ? Math.max(...byMonthCompare.map((m) => Math.max(m.income, m.expenses)))
+    : 1;
 
   // Budget vs actual
   $: budgetComparison = budgets.map((b) => {
     const spent = tx
       .filter((t) => t.type === 'expense' && t.category.toLowerCase() === b.category.toLowerCase())
       .reduce((s, t) => s + t.amount, 0);
-    const pct = Math.min(Math.round((spent / b.limit) * 100), 100);
-    return { ...b, spent, pct };
+    const effective = (b.limit || 0) + (b.rolloverAmount || 0);
+    const pct = effective > 0 ? Math.min(Math.round((spent / effective) * 100), 100) : 0;
+    return { ...b, spent, pct, effective };
   });
 
   function chf(v) {
@@ -143,21 +148,35 @@
         {/if}
       </div>
 
-      <!-- Monthly Spending -->
+      <!-- Monthly Comparison Chart -->
       <div class="card">
-        <h2 style="margin-bottom: 20px">Ausgaben nach Monat</h2>
-        {#if byMonth.length === 0}
+        <div class="chart-header">
+          <h2>Monatsvergleich</h2>
+          <div class="chart-legend">
+            <span class="legend-dot income-dot"></span><span>Einnahmen</span>
+            <span class="legend-dot expense-dot"></span><span>Ausgaben</span>
+          </div>
+        </div>
+        {#if byMonthCompare.length === 0}
           <p class="empty-state">Keine Daten vorhanden.</p>
         {:else}
-          <div class="month-chart">
-            {#each byMonth as item}
-              {@const height = Math.round((item.amount / maxMonth) * 100)}
-              <div class="month-col">
-                <span class="month-val">{chf(item.amount)}</span>
-                <div class="month-bar-track">
-                  <div class="month-bar" style="height:{height}%"></div>
+          <div class="compare-chart">
+            {#each byMonthCompare as item}
+              {@const incomeH = Math.round((item.income / maxMonthVal) * 100)}
+              {@const expenseH = Math.round((item.expenses / maxMonthVal) * 100)}
+              <div class="compare-col">
+                <div class="bar-pair">
+                  <div class="bar-wrap" title="Einnahmen: {chf(item.income)}">
+                    <div class="cbar income-bar" style="height:{incomeH}%"></div>
+                  </div>
+                  <div class="bar-wrap" title="Ausgaben: {chf(item.expenses)}">
+                    <div class="cbar expense-bar" style="height:{expenseH}%"></div>
+                  </div>
                 </div>
-                <span class="month-label">{fmtMonth(item.month)}</span>
+                <span class="compare-label">{fmtMonth(item.month)}</span>
+                <span class="compare-balance" class:pos={item.balance >= 0} class:neg={item.balance < 0}>
+                  {item.balance >= 0 ? '+' : ''}{chf(item.balance)}
+                </span>
               </div>
             {/each}
           </div>
@@ -178,13 +197,18 @@
             </div>
             {#each budgetComparison as b}
               <div class="bt-row">
-                <span class="bt-cat">{b.category}</span>
-                <span>{chf(b.limit)}</span>
+                <span class="bt-cat">
+                  {b.category}
+                  {#if b.rolloverAmount > 0}
+                    <span class="rollover-note">+{chf(b.rolloverAmount)} Rollover</span>
+                  {/if}
+                </span>
+                <span>{chf(b.effective)}</span>
                 <span class:negative={b.pct >= 100} class:warning={b.pct >= 80 && b.pct < 100} class:positive={b.pct < 80}>
                   {chf(b.spent)}
                 </span>
-                <span class:negative={b.spent > b.limit} class:positive={b.spent <= b.limit}>
-                  {chf(Math.max(b.limit - b.spent, 0))}
+                <span class:negative={b.spent > b.effective} class:positive={b.spent <= b.effective}>
+                  {chf(Math.max(b.effective - b.spent, 0))}
                 </span>
                 <span>
                   {#if b.pct >= 100}
@@ -278,65 +302,97 @@
     white-space: nowrap;
   }
 
-  /* Month chart */
-  .month-chart {
+  /* Monthly comparison chart */
+  .chart-header {
     display: flex;
-    gap: 10px;
-    align-items: flex-end;
-    height: 180px;
-    padding-bottom: 30px;
-    position: relative;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    gap: 12px;
+    flex-wrap: wrap;
   }
 
-  .month-col {
+  .chart-header h2 {
+    margin: 0;
+  }
+
+  .chart-legend {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.78rem;
+    color: var(--text-2);
+  }
+
+  .legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+
+  .income-dot { background: var(--green); }
+  .expense-dot { background: var(--red); }
+
+  .compare-chart {
+    display: flex;
+    gap: 6px;
+    align-items: flex-end;
+  }
+
+  .compare-col {
     flex: 1;
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 4px;
-    height: 100%;
-    justify-content: flex-end;
-    position: relative;
+    min-width: 0;
   }
 
-  .month-val {
-    font-size: 0.62rem;
-    font-weight: 600;
-    color: var(--text-3);
-    white-space: nowrap;
-    position: absolute;
-    bottom: 30px;
-    transform: translateY(-100%) translateY(-4px);
-    writing-mode: vertical-rl;
-    display: none;
-  }
-
-  .month-bar-track {
-    width: 100%;
+  .bar-pair {
+    display: flex;
+    gap: 2px;
+    align-items: flex-end;
     height: 130px;
+    width: 100%;
+  }
+
+  .bar-wrap {
+    flex: 1;
+    height: 100%;
     display: flex;
     flex-direction: column;
     justify-content: flex-end;
-    border-radius: 4px 4px 0 0;
+    border-radius: 3px 3px 0 0;
     overflow: hidden;
     background: var(--border-soft);
   }
 
-  .month-bar {
+  .cbar {
     width: 100%;
-    background: var(--primary);
-    border-radius: 4px 4px 0 0;
+    border-radius: 3px 3px 0 0;
     transition: height 0.4s ease;
-    min-height: 4px;
+    min-height: 3px;
   }
 
-  .month-label {
-    position: absolute;
-    bottom: 0;
-    font-size: 0.72rem;
+  .income-bar { background: var(--green); }
+  .expense-bar { background: var(--red); }
+
+  .compare-label {
+    font-size: 0.68rem;
     color: var(--text-3);
     white-space: nowrap;
+    text-align: center;
   }
+
+  .compare-balance {
+    font-size: 0.65rem;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
+  .compare-balance.pos { color: var(--green); }
+  .compare-balance.neg { color: var(--red); }
 
   /* Budget table */
   .budget-table {
@@ -378,6 +434,15 @@
 
   .bt-cat {
     font-weight: 600;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .rollover-note {
+    font-size: 0.7rem;
+    font-weight: 500;
+    color: var(--primary);
   }
 
   /* Top list */

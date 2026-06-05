@@ -68,6 +68,7 @@ export async function deleteUser(id) {
   await db.collection('transactions').deleteMany({ userId });
   await db.collection('budgets').deleteMany({ userId });
   await db.collection('sessions').deleteMany({ userId });
+  await db.collection('savings_goals').deleteMany({ userId });
   await db.collection('users').deleteOne({ _id: new ObjectId(id) });
 }
 
@@ -132,6 +133,8 @@ export async function createTransaction(userId, data) {
     category: data.category.trim(),
     date: data.date,
     note: (data.note || '').trim(),
+    isRecurring: Boolean(data.isRecurring),
+    recurrenceInterval: data.isRecurring ? (data.recurrenceInterval || 'monthly') : null,
     createdAt: new Date()
   });
   return result.insertedId.toString();
@@ -148,7 +151,9 @@ export async function updateTransaction(id, userId, data) {
         type: data.type,
         category: data.category.trim(),
         date: data.date,
-        note: (data.note || '').trim()
+        note: (data.note || '').trim(),
+        isRecurring: Boolean(data.isRecurring),
+        recurrenceInterval: data.isRecurring ? (data.recurrenceInterval || 'monthly') : null
       }
     }
   );
@@ -159,6 +164,60 @@ export async function deleteTransaction(id, userId) {
   return db.collection('transactions').deleteOne({ _id: new ObjectId(id), userId });
 }
 
+// ─── Recurring expansion ──────────────────────────────────────────
+
+export function expandTransactionsForMonth(transactions, month) {
+  const [year, mon] = month.split('-').map(Number);
+  const result = [];
+
+  for (const tx of transactions) {
+    const txMonth = tx.date.slice(0, 7);
+
+    if (!tx.isRecurring) {
+      if (txMonth === month) result.push(tx);
+      continue;
+    }
+
+    if (txMonth > month) continue;
+
+    const txDate = new Date(tx.date + 'T12:00:00');
+    const interval = tx.recurrenceInterval || 'monthly';
+
+    if (interval === 'monthly') {
+      const lastDay = new Date(year, mon, 0).getDate();
+      const day = Math.min(txDate.getDate(), lastDay);
+      result.push({
+        ...tx,
+        date: `${month}-${String(day).padStart(2, '0')}`,
+        _generated: txMonth !== month
+      });
+    } else if (interval === 'yearly') {
+      if (txDate.getMonth() + 1 === mon) {
+        result.push({
+          ...tx,
+          date: `${year}-${String(mon).padStart(2, '0')}-${String(txDate.getDate()).padStart(2, '0')}`,
+          _generated: txDate.getFullYear() !== year
+        });
+      }
+    } else if (interval === 'weekly') {
+      const startOfMonth = new Date(year, mon - 1, 1);
+      const endOfMonth = new Date(year, mon, 0);
+      let cur = new Date(txDate);
+      while (cur < startOfMonth) cur = new Date(cur.getTime() + 7 * 86400000);
+      let idx = 0;
+      while (cur <= endOfMonth) {
+        const d = cur;
+        const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        result.push({ ...tx, _id: `${tx._id}_w${idx}`, date: dateStr, _generated: true });
+        cur = new Date(cur.getTime() + 7 * 86400000);
+        idx++;
+      }
+    }
+  }
+
+  return result.sort((a, b) => b.date.localeCompare(a.date));
+}
+
 // ─── Budgets ──────────────────────────────────────────────────────
 
 export async function getBudgets(userId) {
@@ -167,7 +226,7 @@ export async function getBudgets(userId) {
   return items.map(toPlain);
 }
 
-export async function upsertBudget(userId, category, limit) {
+export async function upsertBudget(userId, category, limit, rolloverEnabled = false, rolloverPercent = 50) {
   const db = await getDb();
   const cat = category.trim();
   const existing = await db.collection('budgets').findOne({
@@ -176,7 +235,10 @@ export async function upsertBudget(userId, category, limit) {
   });
 
   if (existing) {
-    await db.collection('budgets').updateOne({ _id: existing._id }, { $set: { limit: Number(limit) } });
+    await db.collection('budgets').updateOne(
+      { _id: existing._id },
+      { $set: { limit: Number(limit), rolloverEnabled: Boolean(rolloverEnabled), rolloverPercent: Number(rolloverPercent) } }
+    );
     return existing._id.toString();
   }
 
@@ -184,6 +246,10 @@ export async function upsertBudget(userId, category, limit) {
     userId,
     category: cat,
     limit: Number(limit),
+    rolloverEnabled: Boolean(rolloverEnabled),
+    rolloverPercent: Number(rolloverPercent),
+    rolloverAmount: 0,
+    rolloverAppliedMonth: null,
     createdAt: new Date()
   });
   return result.insertedId.toString();
@@ -192,6 +258,97 @@ export async function upsertBudget(userId, category, limit) {
 export async function deleteBudget(id, userId) {
   const db = await getDb();
   return db.collection('budgets').deleteOne({ _id: new ObjectId(id), userId });
+}
+
+// Applies rollover from previousMonth to budgets for currentMonth (runs once per month).
+export async function applyRolloversIfNeeded(userId, currentMonth, previousMonth) {
+  const db = await getDb();
+  const budgets = await db
+    .collection('budgets')
+    .find({ userId, rolloverEnabled: true })
+    .toArray();
+
+  for (const budget of budgets) {
+    if (budget.rolloverAppliedMonth === currentMonth) continue;
+
+    const [py, pm] = previousMonth.split('-').map(Number);
+    const lastDay = new Date(py, pm, 0).getDate();
+    const startOfPrev = `${previousMonth}-01`;
+    const endOfPrev = `${previousMonth}-${String(lastDay).padStart(2, '0')}`;
+
+    const agg = await db.collection('transactions').aggregate([
+      {
+        $match: {
+          userId,
+          type: 'expense',
+          category: { $regex: new RegExp(`^${escapeRegex(budget.category)}$`, 'i') },
+          date: { $gte: startOfPrev, $lte: endOfPrev }
+        }
+      },
+      { $group: { _id: null, total: { $sum: '$amount' } } }
+    ]).toArray();
+
+    const spent = agg[0]?.total ?? 0;
+    const unused = Math.max(budget.limit - spent, 0);
+    const rolloverAmount = Math.round(unused * ((budget.rolloverPercent ?? 50) / 100) * 100) / 100;
+
+    await db.collection('budgets').updateOne(
+      { _id: budget._id },
+      { $set: { rolloverAmount, rolloverAppliedMonth: currentMonth } }
+    );
+  }
+}
+
+// ─── Savings Goals ────────────────────────────────────────────────
+
+export async function getSavingsGoals(userId) {
+  const db = await getDb();
+  const items = await db
+    .collection('savings_goals')
+    .find({ userId })
+    .sort({ createdAt: -1 })
+    .toArray();
+  return items.map(toPlain);
+}
+
+export async function createSavingsGoal(userId, data) {
+  const db = await getDb();
+  const result = await db.collection('savings_goals').insertOne({
+    userId,
+    name: data.name.trim(),
+    targetAmount: Number(data.targetAmount),
+    savedAmount: 0,
+    deadline: data.deadline || null,
+    createdAt: new Date()
+  });
+  return result.insertedId.toString();
+}
+
+export async function addSavingsContribution(id, userId, amount) {
+  const db = await getDb();
+  return db.collection('savings_goals').updateOne(
+    { _id: new ObjectId(id), userId },
+    { $inc: { savedAmount: Number(amount) } }
+  );
+}
+
+export async function updateSavingsGoal(id, userId, data) {
+  const db = await getDb();
+  return db.collection('savings_goals').updateOne(
+    { _id: new ObjectId(id), userId },
+    {
+      $set: {
+        name: data.name.trim(),
+        targetAmount: Number(data.targetAmount),
+        deadline: data.deadline || null
+      }
+    }
+  );
+}
+
+export async function deleteSavingsGoal(id, userId) {
+  const db = await getDb();
+  return db.collection('savings_goals').deleteOne({ _id: new ObjectId(id), userId });
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────

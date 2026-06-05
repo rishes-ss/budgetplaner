@@ -12,6 +12,7 @@
     { href: '/', label: 'Dashboard' },
     { href: '/transactions', label: 'Transaktionen' },
     { href: '/budgets', label: 'Budgets' },
+    { href: '/savings', label: 'Sparziele' },
     { href: '/analysis', label: 'Analyse' }
   ];
 

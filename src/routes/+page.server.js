@@ -1,13 +1,23 @@
 import { redirect } from '@sveltejs/kit';
-import { getTransactions, getBudgets } from '$lib/db.js';
+import { getTransactions, getBudgets, expandTransactionsForMonth } from '$lib/db.js';
 
-export async function load({ locals }) {
+function currentMonthStr() {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+}
+
+export async function load({ locals, url }) {
   if (!locals.user) throw redirect(303, '/login');
 
-  const [transactions, budgets] = await Promise.all([
+  const today = currentMonthStr();
+  const month = url.searchParams.get('month') || today;
+
+  const [allTransactions, budgets] = await Promise.all([
     getTransactions(locals.user.id),
     getBudgets(locals.user.id)
   ]);
 
-  return { transactions, budgets };
+  const transactions = expandTransactionsForMonth(allTransactions, month);
+
+  return { transactions, budgets, month, currentMonth: today };
 }

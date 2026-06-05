@@ -1,10 +1,13 @@
 <script>
+  import { goto } from '$app/navigation';
   import StatCard from '$lib/components/StatCard.svelte';
 
   export let data;
 
   $: transactions = data.transactions;
   $: budgets = data.budgets;
+  $: month = data.month;
+  $: currentMonth = data.currentMonth;
 
   $: income = transactions.filter((t) => t.type === 'income').reduce((s, t) => s + t.amount, 0);
   $: expenses = transactions.filter((t) => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
@@ -18,7 +21,8 @@
   }
 
   function budgetPercent(b) {
-    return Math.min(Math.round((spentFor(b.category) / b.limit) * 100), 100);
+    const effective = (b.limit || 0) + (b.rolloverAmount || 0);
+    return effective > 0 ? Math.min(Math.round((spentFor(b.category) / effective) * 100), 100) : 0;
   }
 
   function progressClass(pct) {
@@ -33,7 +37,7 @@
     return 'positive';
   }
 
-  $: exceededCount = budgets.filter((b) => spentFor(b.category) > b.limit).length;
+  $: exceededCount = budgets.filter((b) => spentFor(b.category) > (b.limit + (b.rolloverAmount || 0))).length;
 
   function chf(v) {
     return new Intl.NumberFormat('de-CH', { style: 'currency', currency: 'CHF' }).format(v);
@@ -41,6 +45,21 @@
 
   function fmtDate(d) {
     return new Date(d).toLocaleDateString('de-CH', { day: '2-digit', month: '2-digit' });
+  }
+
+  function fmtMonthLabel(ym) {
+    const [y, m] = ym.split('-');
+    return new Date(parseInt(y), parseInt(m) - 1).toLocaleDateString('de-CH', {
+      month: 'long',
+      year: 'numeric'
+    });
+  }
+
+  function stepMonth(dir) {
+    const [y, m] = month.split('-').map(Number);
+    const d = new Date(y, m - 1 + dir, 1);
+    const next = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+    goto(`/?month=${next}`);
   }
 </script>
 
@@ -56,10 +75,29 @@
         <p class="eyebrow">Willkommen zurück, {data.user.username} 👋</p>
         <h1>Deine Finanzen</h1>
       </div>
-      <a href="/transactions" class="btn btn-primary">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        Transaktion erfassen
-      </a>
+      <div class="header-right">
+        <div class="month-picker">
+          <button class="btn btn-ghost btn-sm month-btn" on:click={() => stepMonth(-1)} title="Vorheriger Monat">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
+          <span class="month-label">{fmtMonthLabel(month)}</span>
+          <button
+            class="btn btn-ghost btn-sm month-btn"
+            on:click={() => stepMonth(1)}
+            disabled={month >= currentMonth}
+            title="Nächster Monat"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+          {#if month !== currentMonth}
+            <a href="/" class="btn btn-ghost btn-sm today-btn" title="Zurück zum aktuellen Monat">Heute</a>
+          {/if}
+        </div>
+        <a href="/transactions" class="btn btn-primary">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Transaktion erfassen
+        </a>
+      </div>
     </div>
 
     <!-- Stats -->
@@ -128,7 +166,7 @@
 
         {#if recent.length === 0}
           <div class="empty-state">
-            <p>Noch keine Transaktionen erfasst.</p>
+            <p>Keine Transaktionen in {fmtMonthLabel(month)}.</p>
             <a href="/transactions" class="btn btn-primary btn-sm">Erste erfassen</a>
           </div>
         {:else}
@@ -139,7 +177,12 @@
                   {tx.type === 'income' ? '↑' : '↓'}
                 </div>
                 <div class="tx-body">
-                  <span class="tx-title">{tx.title}</span>
+                  <span class="tx-title">
+                    {tx.title}
+                    {#if tx.isRecurring}
+                      <span class="recurring-dot" title="Wiederkehrend">↻</span>
+                    {/if}
+                  </span>
                   <span class="tx-meta">{tx.category} · {fmtDate(tx.date)}</span>
                 </div>
                 <span class="tx-amount" class:positive={tx.type === 'income'} class:negative={tx.type === 'expense'}>
@@ -167,13 +210,19 @@
           <div class="budget-list">
             {#each budgets as b}
               {@const spent = spentFor(b.category)}
+              {@const effective = (b.limit || 0) + (b.rolloverAmount || 0)}
               {@const pct = budgetPercent(b)}
               <div class="budget-item">
                 <div class="budget-row">
-                  <span class="budget-cat">{b.category}</span>
+                  <span class="budget-cat">
+                    {b.category}
+                    {#if b.rolloverAmount > 0}
+                      <span class="rollover-hint" title="Inkl. Rollover aus Vormonat">+{chf(b.rolloverAmount)}</span>
+                    {/if}
+                  </span>
                   <span class="budget-nums">
                     <span class={amountClass(pct)}>{chf(spent)}</span>
-                    <span class="muted"> / {chf(b.limit)}</span>
+                    <span class="muted"> / {chf(effective)}</span>
                   </span>
                 </div>
                 <div class="progress-track">
@@ -187,7 +236,7 @@
                   {:else}
                     <span class="badge badge-green">{pct}% verbraucht</span>
                   {/if}
-                  <span class="muted" style="font-size:0.78rem">{chf(Math.max(b.limit - spent, 0))} übrig</span>
+                  <span class="muted" style="font-size:0.78rem">{chf(Math.max(effective - spent, 0))} übrig</span>
                 </div>
               </div>
             {/each}
@@ -219,6 +268,47 @@
 
   h1 {
     margin: 0;
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .month-picker {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background: var(--surface-soft);
+    border: 1px solid var(--border-soft);
+    border-radius: var(--radius-sm);
+    padding: 4px 6px;
+  }
+
+  .month-btn {
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .month-label {
+    font-size: 0.85rem;
+    font-weight: 700;
+    min-width: 130px;
+    text-align: center;
+    color: var(--text);
+  }
+
+  .today-btn {
+    font-size: 0.78rem;
+    padding: 3px 8px;
+    height: auto;
+    color: var(--primary);
   }
 
   .dashboard-grid {
@@ -306,6 +396,12 @@
     text-overflow: ellipsis;
   }
 
+  .recurring-dot {
+    font-size: 0.8rem;
+    color: var(--primary);
+    margin-left: 4px;
+  }
+
   .tx-meta {
     font-size: 0.74rem;
     color: var(--text-3);
@@ -339,6 +435,18 @@
   .budget-cat {
     font-size: 0.88rem;
     font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .rollover-hint {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--primary);
+    background: var(--primary-light);
+    padding: 1px 5px;
+    border-radius: 100px;
   }
 
   .budget-nums {
@@ -366,8 +474,9 @@
       align-items: flex-start;
     }
 
-    .page-header .btn {
+    .header-right {
       width: 100%;
+      justify-content: space-between;
     }
   }
 </style>

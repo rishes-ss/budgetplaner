@@ -41,10 +41,11 @@ Viele Studierende und junge Erwachsene haben keinen guten Überblick über ihre 
 BudgetPlaner ist eine webbasierte Applikation, mit der Nutzende ihre persönlichen Finanzen übersichtlich verwalten können. Nach der Registrierung können Transaktionen erfasst, Budgets gesetzt und Ausgabenmuster analysiert werden.
 
 - **Kernfunktionalität:**
-  - **Dashboard:** Übersicht über Gesamteinnahmen, -ausgaben, Saldo und Budgetstatus auf einen Blick.
-  - **Transaktionen:** Einnahmen und Ausgaben erfassen (Titel, Betrag, Kategorie, Datum, Notiz), bearbeiten und löschen. Filterung nach Typ und Kategorie.
-  - **Budgets:** Monatsbudgets pro Kategorie anlegen oder anpassen. Automatische Empfehlungen bei Überschreitungen.
-  - **Analyse:** Visualisierung der Ausgaben nach Kategorie (Balkendiagramm), nach Monat (Säulendiagramm), Budget-vs.-Ist-Tabelle und Top-Ausgaben-Liste.
+  - **Dashboard:** Übersicht über Gesamteinnahmen, -ausgaben, Saldo und Budgetstatus auf einen Blick — mit Monatsfilter (Pfeiltasten) um beliebige Monate zu vergleichen.
+  - **Transaktionen:** Einnahmen und Ausgaben erfassen (Titel, Betrag, Kategorie, Datum, Notiz), bearbeiten und löschen. Filterung nach Typ und Kategorie. Transaktionen können als wiederkehrend (monatlich, wöchentlich, jährlich) markiert werden.
+  - **Budgets:** Monatsbudgets pro Kategorie anlegen oder anpassen. Automatische Empfehlungen bei Überschreitungen. Optionaler Rollover: ungenutztes Budget wird anteilig in den Folgemonat übertragen.
+  - **Sparziele:** Sparziele mit Name, Zielbetrag und optionalem Zieldatum anlegen. Einzahlungen direkt auf der Seite buchen; Fortschrittsanzeige und Resttage-Anzeige.
+  - **Analyse:** Visualisierung der Ausgaben nach Kategorie (Balkendiagramm), Monatsvergleich Einnahmen vs. Ausgaben (gruppiertes Säulendiagramm, bis 12 Monate), Budget-vs.-Ist-Tabelle und Top-Ausgaben-Liste.
   - **Authentifizierung:** Registrierung und Login mit sicherer Session-Verwaltung.
 
 - **Annahmen:** Es wird davon ausgegangen, dass Nutzende bereit sind, ihre Transaktionen manuell einzugeben. Eine Bankanbindung ist nicht vorgesehen.
@@ -106,11 +107,12 @@ Die Durchführung erfolgt phasenbasiert; dokumentiert sind die wichtigsten Ergeb
 
 Beschreibt die Gestaltung und Interaktion des umgesetzten Prototyps.
 
-- **Informationsarchitektur:** Die App ist in vier Hauptbereiche gegliedert, die über eine persistente Navigation erreichbar sind:
-  - `/` – Dashboard (Übersicht)
-  - `/transactions` – Transaktionen (Erfassen, Bearbeiten, Filtern)
-  - `/budgets` – Budgets (Verwalten, Empfehlungen)
-  - `/analysis` – Analyse (Diagramme, Tabellen)
+- **Informationsarchitektur:** Die App ist in fünf Hauptbereiche gegliedert, die über eine persistente Navigation erreichbar sind:
+  - `/` – Dashboard (Übersicht, Monatsfilter)
+  - `/transactions` – Transaktionen (Erfassen, Bearbeiten, Filtern, Wiederkehrend)
+  - `/budgets` – Budgets (Verwalten, Empfehlungen, Rollover)
+  - `/savings` – Sparziele (Anlegen, Einzahlen, Fortschritt)
+  - `/analysis` – Analyse (Diagramme, Monatsvergleich, Tabellen)
   - `/login` / `/register` – Authentifizierung
 
 - **User Interface Design:**
@@ -127,11 +129,15 @@ Beschreibt die Gestaltung und Interaktion des umgesetzten Prototyps.
 
   ![Budgets](docs/budget.png)
 
-  **Analyse** — Ausgaben nach Kategorie (horizontales Balkendiagramm), Ausgaben nach Monat (Säulendiagramm, letzte 6 Monate), Budget-vs.-Ist-Tabelle und Top-Ausgaben-Liste.
+  **Analyse** — Ausgaben nach Kategorie (horizontales Balkendiagramm), Monatsvergleich Einnahmen vs. Ausgaben (gruppiertes Säulendiagramm, bis 12 Monate), Budget-vs.-Ist-Tabelle und Top-Ausgaben-Liste.
 
   ![Analyse – Diagramme](docs/analyse1.png)
 
   ![Analyse – Tabelle & Top-Ausgaben](docs/analyse2.png)
+
+  **Sparziele** — Karten pro Ziel mit Fortschrittsbalken, Resttagen bis zum Zieldatum und direktem Einzahlungsformular.
+
+  (TODO: Screenshot Sparziele-Seite einfügen)
 
 - **Designentscheidungen:**
   - Farbkodierung: Grün = positiv/im Rahmen, Orange = Warnung (80–99% des Budgets), Rot = Überschreitung (≥100%)
@@ -162,14 +168,15 @@ Fasst die technische Realisierung zusammen.
   ├── lib/
   │   ├── components/
   │   │   └── StatCard.svelte       # Wiederverwendbare KPI-Karte
-  │   └── db.js                     # Datenbankschicht (Users, Sessions, Transactions, Budgets)
+  │   └── db.js                     # Datenbankschicht (Users, Sessions, Transactions, Budgets, Savings Goals)
   ├── routes/
   │   ├── +layout.svelte            # Globales Layout mit Navigation
   │   ├── +layout.server.js         # Auth-Guard (Weiterleitung wenn nicht eingeloggt)
-  │   ├── +page.svelte              # Dashboard
-  │   ├── transactions/             # Transaktionsverwaltung (CRUD)
-  │   ├── budgets/                  # Budgetverwaltung + Empfehlungen
-  │   ├── analysis/                 # Analyse & Diagramme
+  │   ├── +page.svelte              # Dashboard (mit Monatsfilter)
+  │   ├── transactions/             # Transaktionsverwaltung (CRUD + Wiederkehrend)
+  │   ├── budgets/                  # Budgetverwaltung + Empfehlungen + Rollover
+  │   ├── savings/                  # Sparziele (CRUD + Einzahlungen)
+  │   ├── analysis/                 # Analyse & Diagramme (inkl. Monatsvergleich)
   │   ├── login/                    # Login
   │   ├── register/                 # Registrierung
   │   └── logout/                   # Logout-Endpoint
@@ -178,7 +185,7 @@ Fasst die technische Realisierung zusammen.
   ```
 
 - **Daten & Schnittstellen:**
-  - Alle Daten werden in **MongoDB Atlas** gespeichert. Collections: `users`, `sessions`, `transactions`, `budgets`.
+  - Alle Daten werden in **MongoDB Atlas** gespeichert. Collections: `users`, `sessions`, `transactions`, `budgets`, `savings_goals`.
   - Datenzugriff ausschliesslich serverseitig über `src/lib/db.js`.
   - Kein öffentliches API — Datenaustausch erfolgt über SvelteKit Form Actions und Load-Funktionen.
   - Umgebungsvariablen: `MONGODB_URI` (in `.env`, nicht im Repository)
@@ -190,6 +197,9 @@ Fasst die technische Realisierung zusammen.
   - Passwort-Hashing serverseitig mit bcryptjs — keine Klartextpasswörter in der Datenbank.
   - Alle Geldbeträge werden als Number (Float) in MongoDB gespeichert und erst zur Anzeige mit `Intl.NumberFormat` formatiert.
   - Die Budget-Empfehlungen werden rein clientseitig berechnet — kein zusätzlicher Server-Request nötig.
+  - Wiederkehrende Transaktionen werden nicht als Kopien gespeichert, sondern per `expandTransactionsForMonth()` serverseitig für den gewählten Monat virtuell expandiert — so bleibt die Datenbank sauber.
+  - Budget-Rollover wird beim Laden der Budgets-Seite serverseitig einmalig pro Monat berechnet und in MongoDB persistiert (Feld `rolloverAmount` + `rolloverAppliedMonth`).
+  - Monatsfilter: Der Dashboard-URL-Parameter `?month=YYYY-MM` steuert die Datenfiltierung vollständig serverseitig — kein zusätzlicher Clientstate nötig.
 
 ### 3.5 Validate
 
@@ -253,6 +263,56 @@ Die getestete Version war ein separater, vereinfachter Prototyp (HTML/CSS/JavaSc
 - **Beschreibung & Nutzen:** Auf der Transaktionsseite können Einträge nach Typ (Einnahme/Ausgabe) und Kategoriestichwort live gefiltert werden. So behalten Nutzende auch bei vielen Einträgen den Überblick.
 - **Wo umgesetzt:** Frontend — `src/routes/transactions/+page.svelte`, reaktiver Filter via Svelte-Reactive-Statements (`$:`), kein zusätzlicher Server-Request.
 - **Referenz:** Filter-Leiste oben rechts in der Transaktionsliste.
+- **Aus Evaluation abgeleitet?:** Nein
+
+### 4.4 Monatsfilter auf dem Dashboard
+
+- **Beschreibung & Nutzen:** Das Dashboard zeigt standardmässig den aktuellen Monat. Über Pfeiltasten kann zwischen beliebigen Monaten gewechselt werden. Alle KPI-Karten (Einnahmen, Ausgaben, Saldo, Budgetstatus) und die Listenansichten beziehen sich immer nur auf den gewählten Monat — so lassen sich Monate direkt miteinander vergleichen.
+- **Wo umgesetzt:** `src/routes/+page.server.js` (URL-Parameter `?month=YYYY-MM`, serverseitige Filterung), `src/routes/+page.svelte` (Monats-Picker-UI mit Prev/Next-Buttons).
+- **Referenz:** Monats-Picker rechts im Dashboard-Header.
+
+  (TODO: Screenshot Monatsfilter einfügen)
+
+- **Aus Evaluation abgeleitet?:** Nein
+
+### 4.5 Wiederkehrende Transaktionen
+
+- **Beschreibung & Nutzen:** Fixe Ausgaben und Einnahmen (z.B. Miete, Abonnemente, Lohn) können beim Erfassen als „wiederkehrend" markiert werden. Das Intervall ist wählbar: monatlich, wöchentlich oder jährlich. Beim Aufruf des Dashboards werden wiederkehrende Einträge für den gewählten Monat automatisch berücksichtigt — ohne dass jeder Monat manuell erfasst werden muss. In der Transaktionsliste sind wiederkehrende Einträge mit einem ↻-Badge gekennzeichnet.
+- **Wo umgesetzt:** `src/lib/db.js` (Felder `isRecurring`, `recurrenceInterval`, Funktion `expandTransactionsForMonth()`), `src/routes/transactions/+page.server.js` und `+page.svelte` (Toggle + Intervall-Selektor im Formular).
+- **Referenz:** Abschnitt „Wiederkehrend" im Transaktionsformular; ↻-Badge in der Transaktionsliste.
+
+  (TODO: Screenshot Wiederkehrend-Toggle einfügen)
+
+- **Aus Evaluation abgeleitet?:** Nein
+
+### 4.6 Sparziele
+
+- **Beschreibung & Nutzen:** Nutzende können konkrete Sparziele anlegen (z.B. „Urlaubskasse CHF 2'000 bis August"). Einzahlungen können direkt auf der Seite gebucht werden. Ein Fortschrittsbalken zeigt den aktuellen Stand, ein Badge zeigt die verbleibenden Tage bis zum Zieldatum. Eine Zusammenfassungszeile zeigt den aggregierten Fortschritt über alle Ziele.
+- **Wo umgesetzt:** `src/lib/db.js` (Collection `savings_goals`, CRUD-Funktionen), `src/routes/savings/+page.server.js`, `src/routes/savings/+page.svelte`.
+- **Referenz:** Navigationspunkt „Sparziele" in der Hauptnavigation, Route `/savings`.
+
+  (TODO: Screenshot Sparziele-Seite einfügen)
+
+- **Aus Evaluation abgeleitet?:** Nein
+
+### 4.7 Monatsvergleich in der Analyse
+
+- **Beschreibung & Nutzen:** Der bisherige Einzelbalken-Chart (Ausgaben pro Monat) wurde zu einem gruppierten Balkendiagramm erweitert: Pro Monat werden Einnahmen (grün) und Ausgaben (rot) nebeneinander dargestellt. Darunter steht die Monatsbilanz farblich hervorgehoben (+ grün / − rot). So ist auf einen Blick erkennbar, in welchen Monaten mehr ausgegeben als eingenommen wurde.
+- **Wo umgesetzt:** `src/routes/analysis/+page.svelte` — reaktive Berechnung `byMonthCompare`, gruppiertes CSS-Balkendiagramm ohne externe Chart-Bibliothek.
+- **Referenz:** „Monatsvergleich"-Panel auf der Analyse-Seite (oben rechts).
+
+  (TODO: Screenshot Monatsvergleich-Diagramm einfügen)
+
+- **Aus Evaluation abgeleitet?:** Nein
+
+### 4.8 Budget-Rollover
+
+- **Beschreibung & Nutzen:** Beim Anlegen eines Budgets kann der Rollover aktiviert werden. Wird ein Budget in einem Monat nicht vollständig ausgeschöpft, wird ein konfigurierbarer Anteil des Rests (10–100%, einstellbar per Slider) automatisch zum Folgemonat addiert. So „verfällt" ungenutztes Budget nicht einfach, sondern steht im nächsten Monat zur Verfügung. Budgetkarten zeigen den Rollover-Betrag mit einem blauen Chip an.
+- **Wo umgesetzt:** `src/lib/db.js` (Felder `rolloverEnabled`, `rolloverPercent`, `rolloverAmount`, `rolloverAppliedMonth`; Funktion `applyRolloversIfNeeded()`), `src/routes/budgets/+page.server.js` (Rollover-Berechnung beim Page-Load), `src/routes/budgets/+page.svelte` (Toggle + Prozent-Slider im Formular, Rollover-Chip in Budgetkarten).
+- **Referenz:** Abschnitt „Budget-Rollover aktivieren" im Budgetformular; blauer „+X CHF Rollover"-Chip auf Budgetkarten.
+
+  (TODO: Screenshot Rollover-Budgetkarte einfügen)
+
 - **Aus Evaluation abgeleitet?:** Nein
 
 ---

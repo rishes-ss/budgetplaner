@@ -18,6 +18,8 @@ export const actions = {
     const category = String(data.get('category') ?? '').trim();
     const date = String(data.get('date') ?? '');
     const note = String(data.get('note') ?? '').trim();
+    const isRecurring = data.get('isRecurring') === 'true';
+    const recurrenceInterval = String(data.get('recurrenceInterval') ?? 'monthly');
 
     const errors = {};
     if (!title) errors.title = 'Titel ist erforderlich.';
@@ -26,10 +28,10 @@ export const actions = {
     if (!date) errors.date = 'Datum ist erforderlich.';
 
     if (Object.keys(errors).length > 0) {
-      return fail(400, { errors, values: { title, amount, type, category, date, note }, action: 'create' });
+      return fail(400, { errors, values: { title, amount, type, category, date, note, isRecurring, recurrenceInterval }, action: 'create' });
     }
 
-    await createTransaction(locals.user.id, { title, amount, type, category, date, note });
+    await createTransaction(locals.user.id, { title, amount, type, category, date, note, isRecurring, recurrenceInterval });
     return { success: 'Transaktion wurde gespeichert.' };
   },
 
@@ -44,6 +46,8 @@ export const actions = {
     const category = String(data.get('category') ?? '').trim();
     const date = String(data.get('date') ?? '');
     const note = String(data.get('note') ?? '').trim();
+    const isRecurring = data.get('isRecurring') === 'true';
+    const recurrenceInterval = String(data.get('recurrenceInterval') ?? 'monthly');
 
     const errors = {};
     if (!title) errors.title = 'Titel ist erforderlich.';
@@ -51,10 +55,10 @@ export const actions = {
     if (!category) errors.category = 'Kategorie ist erforderlich.';
 
     if (Object.keys(errors).length > 0) {
-      return fail(400, { errors, values: { id, title, amount, type, category, date, note }, action: 'update' });
+      return fail(400, { errors, values: { id, title, amount, type, category, date, note, isRecurring, recurrenceInterval }, action: 'update' });
     }
 
-    await updateTransaction(id, locals.user.id, { title, amount, type, category, date, note });
+    await updateTransaction(id, locals.user.id, { title, amount, type, category, date, note, isRecurring, recurrenceInterval });
     return { success: 'Transaktion wurde aktualisiert.' };
   },
 

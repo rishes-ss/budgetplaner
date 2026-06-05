@@ -6,6 +6,9 @@
   $: notice = form?.success ?? null;
   $: formErrors = form?.errors ?? {};
 
+  let rolloverEnabled = false;
+  let rolloverPercent = 50;
+
   function spentFor(category) {
     return data.transactions
       .filter((t) => t.type === 'expense' && t.category.toLowerCase() === category.toLowerCase())
@@ -13,7 +16,8 @@
   }
 
   function pct(b) {
-    return Math.min(Math.round((spentFor(b.category) / b.limit) * 100), 100);
+    const effective = (b.limit || 0) + (b.rolloverAmount || 0);
+    return effective > 0 ? Math.min(Math.round((spentFor(b.category) / effective) * 100), 100) : 0;
   }
 
   function progressClass(p) {
@@ -31,16 +35,21 @@
     'Gesundheit', 'Bildung', 'Unterhaltung', 'Sparen', 'Sonstiges'
   ];
 
-  // Für jedes überschrittene Budget: finde das Budget mit dem grössten Puffer als Kürzungskandidat
   $: recommendations = (() => {
     const exceeded = data.budgets
-      .map((b) => ({ ...b, spent: spentFor(b.category), overBy: spentFor(b.category) - b.limit }))
+      .map((b) => {
+        const effective = (b.limit || 0) + (b.rolloverAmount || 0);
+        return { ...b, spent: spentFor(b.category), overBy: spentFor(b.category) - effective, effective };
+      })
       .filter((b) => b.overBy > 0);
 
     return exceeded.map((exc) => {
       const candidates = data.budgets
         .filter((b) => b.category !== exc.category)
-        .map((b) => ({ ...b, remaining: b.limit - spentFor(b.category) }))
+        .map((b) => {
+          const effective = (b.limit || 0) + (b.rolloverAmount || 0);
+          return { ...b, remaining: effective - spentFor(b.category) };
+        })
         .filter((b) => b.remaining > 0)
         .sort((a, b) => b.remaining - a.remaining);
 
@@ -104,6 +113,8 @@
         <p class="form-hint">Existiert bereits ein Budget für die Kategorie, wird es automatisch aktualisiert.</p>
 
         <form method="POST" action="?/save" use:enhance class="budget-form">
+          <input type="hidden" name="rolloverEnabled" value={rolloverEnabled} />
+
           <div class="form-group">
             <label for="category">Kategorie</label>
             <input
@@ -133,6 +144,32 @@
             {#if formErrors.limit}<span class="error-msg">{formErrors.limit}</span>{/if}
           </div>
 
+          <!-- Rollover Toggle -->
+          <div class="rollover-block">
+            <label class="toggle-label">
+              <input type="checkbox" bind:checked={rolloverEnabled} />
+              <span>Budget-Rollover aktivieren</span>
+            </label>
+            <p class="rollover-hint-text">Nicht verwendetes Budget wird zum Teil in den Folgemonat übertragen.</p>
+            {#if rolloverEnabled}
+              <div class="form-group" style="margin-top: 10px; margin-bottom: 0">
+                <label for="rolloverPercent">Übertrag (%)</label>
+                <div class="percent-row">
+                  <input
+                    id="rolloverPercent"
+                    name="rolloverPercent"
+                    type="range"
+                    min="10"
+                    max="100"
+                    step="10"
+                    bind:value={rolloverPercent}
+                  />
+                  <span class="percent-val">{rolloverPercent}%</span>
+                </div>
+              </div>
+            {/if}
+          </div>
+
           <button type="submit" class="btn btn-primary btn-block">Budget speichern</button>
         </form>
 
@@ -148,13 +185,17 @@
               <strong>{chf(data.budgets.reduce((s, b) => s + b.limit, 0))}</strong>
             </div>
             <div class="summary-row">
+              <span>Rollover gesamt</span>
+              <strong class="positive">{chf(data.budgets.reduce((s, b) => s + (b.rolloverAmount || 0), 0))}</strong>
+            </div>
+            <div class="summary-row">
               <span>Ausgaben total</span>
               <strong class="negative">{chf(data.budgets.reduce((s, b) => s + spentFor(b.category), 0))}</strong>
             </div>
             <div class="summary-row">
               <span>Überschrittene</span>
-              <strong class:negative={data.budgets.filter((b) => spentFor(b.category) > b.limit).length > 0}>
-                {data.budgets.filter((b) => spentFor(b.category) > b.limit).length} von {data.budgets.length}
+              <strong class:negative={data.budgets.filter((b) => spentFor(b.category) > (b.limit + (b.rolloverAmount || 0))).length > 0}>
+                {data.budgets.filter((b) => spentFor(b.category) > (b.limit + (b.rolloverAmount || 0))).length} von {data.budgets.length}
               </strong>
             </div>
           </div>
@@ -172,6 +213,7 @@
           <div class="budget-grid">
             {#each data.budgets as b}
               {@const spent = spentFor(b.category)}
+              {@const effective = (b.limit || 0) + (b.rolloverAmount || 0)}
               {@const p = pct(b)}
               {@const pc = progressClass(p)}
               <div class="card budget-card" class:card-warn={p >= 80 && p < 100} class:card-danger={p >= 100}>
@@ -208,22 +250,29 @@
                   </div>
                   <div class="amount-sep">/</div>
                   <div class="amount-block">
-                    <span class="amount-label">Budget</span>
-                    <span class="amount-val">{chf(b.limit)}</span>
+                    <span class="amount-label">Budget{b.rolloverAmount > 0 ? ' +Rollover' : ''}</span>
+                    <span class="amount-val">{chf(effective)}</span>
                   </div>
                   <div class="amount-block remaining">
                     <span class="amount-label">Übrig</span>
-                    <span class="amount-val" class:negative={spent > b.limit} class:positive={spent <= b.limit}>
-                      {chf(Math.max(b.limit - spent, 0))}
+                    <span class="amount-val" class:negative={spent > effective} class:positive={spent <= effective}>
+                      {chf(Math.max(effective - spent, 0))}
                     </span>
                   </div>
                 </div>
+
+                {#if b.rolloverAmount > 0}
+                  <div class="rollover-tag">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.5"/></svg>
+                    +{chf(b.rolloverAmount)} Rollover aus Vormonat
+                  </div>
+                {/if}
 
                 <div class="progress-track" style="height: 10px">
                   <div class="progress-bar {pc}" style="width:{p}%"></div>
                 </div>
 
-                <p class="pct-label muted">{p}% verbraucht</p>
+                <p class="pct-label muted">{p}% verbraucht{b.rolloverEnabled ? ' · Rollover aktiv (' + (b.rolloverPercent ?? 50) + '%)' : ''}</p>
               </div>
             {/each}
           </div>
@@ -244,6 +293,54 @@
     display: flex;
     flex-direction: column;
     gap: 14px;
+  }
+
+  .rollover-block {
+    padding: 12px 14px;
+    border: 1px solid var(--border-soft);
+    border-radius: var(--radius-sm);
+    background: var(--surface-soft);
+  }
+
+  .toggle-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-size: 0.88rem;
+    font-weight: 600;
+    user-select: none;
+  }
+
+  .toggle-label input[type='checkbox'] {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+    accent-color: var(--primary);
+  }
+
+  .rollover-hint-text {
+    font-size: 0.78rem;
+    color: var(--text-3);
+    margin: 4px 0 0;
+  }
+
+  .percent-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .percent-row input[type='range'] {
+    flex: 1;
+    accent-color: var(--primary);
+  }
+
+  .percent-val {
+    font-size: 0.9rem;
+    font-weight: 700;
+    min-width: 36px;
+    color: var(--primary);
   }
 
   .summary-box {
@@ -344,6 +441,19 @@
 
   .remaining {
     margin-left: auto;
+  }
+
+  .rollover-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--primary);
+    background: var(--primary-light);
+    border-radius: 100px;
+    padding: 3px 8px;
+    margin-bottom: 10px;
   }
 
   .pct-label {

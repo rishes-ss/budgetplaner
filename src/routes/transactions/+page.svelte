@@ -6,12 +6,20 @@
   let editing = null;
   let filterType = 'all';
   let filterCat = '';
+  let isRecurring = false;
+  let recurrenceInterval = 'monthly';
+  let editIsRecurring = false;
+  let editRecurrenceInterval = 'monthly';
 
   $: notice = form?.success ?? null;
   $: formErrors = form?.errors ?? {};
   $: formValues = form?.values ?? {};
 
-  $: if (form?.success && form?.action !== 'update') editing = null;
+  $: if (form?.success && form?.action !== 'update') {
+    editing = null;
+    isRecurring = false;
+    recurrenceInterval = 'monthly';
+  }
 
   $: filtered = data.transactions.filter((t) => {
     if (filterType !== 'all' && t.type !== filterType) return false;
@@ -21,10 +29,14 @@
 
   function startEdit(tx) {
     editing = { ...tx };
+    editIsRecurring = Boolean(tx.isRecurring);
+    editRecurrenceInterval = tx.recurrenceInterval || 'monthly';
   }
 
   function cancelEdit() {
     editing = null;
+    editIsRecurring = false;
+    editRecurrenceInterval = 'monthly';
   }
 
   function chf(v) {
@@ -34,6 +46,8 @@
   function fmtDate(d) {
     return new Date(d).toLocaleDateString('de-CH', { day: '2-digit', month: '2-digit', year: 'numeric' });
   }
+
+  const intervalLabels = { monthly: 'Monatlich', weekly: 'Wöchentlich', yearly: 'Jährlich' };
 
   const today = new Date().toISOString().slice(0, 10);
 
@@ -60,6 +74,9 @@
         {#if editing}
           <form method="POST" action="?/update" use:enhance class="tx-form">
             <input type="hidden" name="id" value={editing._id} />
+            <input type="hidden" name="isRecurring" value={editIsRecurring} />
+            <input type="hidden" name="recurrenceInterval" value={editRecurrenceInterval} />
+
             <div class="form-group">
               <label for="edit-title">Titel</label>
               <input id="edit-title" name="title" type="text" value={editing.title} required placeholder="z.B. Mensa" />
@@ -94,6 +111,25 @@
               <label for="edit-note">Notiz (optional)</label>
               <input id="edit-note" name="note" type="text" value={editing.note} placeholder="Optionaler Kontext" />
             </div>
+
+            <!-- Recurring toggle (edit) -->
+            <div class="recurring-block">
+              <label class="toggle-label">
+                <input type="checkbox" bind:checked={editIsRecurring} />
+                <span>Wiederkehrend</span>
+              </label>
+              {#if editIsRecurring}
+                <div class="form-group" style="margin-top: 8px; margin-bottom: 0">
+                  <label for="edit-interval">Intervall</label>
+                  <select id="edit-interval" bind:value={editRecurrenceInterval}>
+                    <option value="monthly">Monatlich</option>
+                    <option value="weekly">Wöchentlich</option>
+                    <option value="yearly">Jährlich</option>
+                  </select>
+                </div>
+              {/if}
+            </div>
+
             <div class="form-actions">
               <button type="submit" class="btn btn-primary">Speichern</button>
               <button type="button" class="btn" on:click={cancelEdit}>Abbrechen</button>
@@ -101,6 +137,9 @@
           </form>
         {:else}
           <form method="POST" action="?/create" use:enhance class="tx-form">
+            <input type="hidden" name="isRecurring" value={isRecurring} />
+            <input type="hidden" name="recurrenceInterval" value={recurrenceInterval} />
+
             <div class="form-group">
               <label for="title">Titel</label>
               <input id="title" name="title" type="text" value={formValues.title ?? ''} required placeholder="z.B. Mensa Mittagessen" />
@@ -136,6 +175,25 @@
               <label for="note">Notiz (optional)</label>
               <input id="note" name="note" type="text" value={formValues.note ?? ''} placeholder="Optionaler Kontext" />
             </div>
+
+            <!-- Recurring toggle (create) -->
+            <div class="recurring-block">
+              <label class="toggle-label">
+                <input type="checkbox" bind:checked={isRecurring} />
+                <span>Wiederkehrend</span>
+              </label>
+              {#if isRecurring}
+                <div class="form-group" style="margin-top: 8px; margin-bottom: 0">
+                  <label for="interval">Intervall</label>
+                  <select id="interval" bind:value={recurrenceInterval}>
+                    <option value="monthly">Monatlich</option>
+                    <option value="weekly">Wöchentlich</option>
+                    <option value="yearly">Jährlich</option>
+                  </select>
+                </div>
+              {/if}
+            </div>
+
             <button type="submit" class="btn btn-primary btn-block">Transaktion speichern</button>
           </form>
         {/if}
@@ -171,7 +229,14 @@
                   {tx.type === 'income' ? '↑' : '↓'}
                 </div>
                 <div class="tx-body">
-                  <span class="tx-title">{tx.title}</span>
+                  <span class="tx-title">
+                    {tx.title}
+                    {#if tx.isRecurring}
+                      <span class="badge-recurring" title="{intervalLabels[tx.recurrenceInterval] ?? ''}">
+                        ↻ {intervalLabels[tx.recurrenceInterval] ?? 'Wiederkehrend'}
+                      </span>
+                    {/if}
+                  </span>
                   <span class="tx-meta">
                     {tx.category} · {fmtDate(tx.date)}
                     {#if tx.note}<span class="tx-note"> · {tx.note}</span>{/if}
@@ -218,6 +283,42 @@
     display: flex;
     gap: 10px;
     flex-wrap: wrap;
+  }
+
+  .recurring-block {
+    padding: 12px 14px;
+    border: 1px solid var(--border-soft);
+    border-radius: var(--radius-sm);
+    background: var(--surface-soft);
+  }
+
+  .toggle-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-size: 0.88rem;
+    font-weight: 600;
+    user-select: none;
+  }
+
+  .toggle-label input[type='checkbox'] {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+    accent-color: var(--primary);
+  }
+
+  .badge-recurring {
+    display: inline-block;
+    font-size: 0.68rem;
+    font-weight: 700;
+    background: var(--primary-light);
+    color: var(--primary);
+    border-radius: 100px;
+    padding: 1px 6px;
+    margin-left: 5px;
+    vertical-align: middle;
   }
 
   .list-header {
