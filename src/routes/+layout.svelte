@@ -15,6 +15,7 @@
     { href: '/analysis', label: 'Analyse' }
   ];
 
+
   onMount(() => {
     theme = localStorage.getItem('bp-theme') || 'light';
     document.documentElement.setAttribute('data-theme', theme);
@@ -48,6 +49,15 @@
               {link.label}
             </a>
           {/each}
+          {#if data.user?.role === 'admin'}
+            <a
+              href="/admin"
+              class="nav-link nav-link-admin"
+              class:active={$page.url.pathname === '/admin'}
+            >
+              Admin
+            </a>
+          {/if}
         </nav>
       {/if}
 
@@ -163,6 +173,20 @@
   .nav-link.active {
     color: var(--primary);
     background: var(--primary-light);
+  }
+
+  .nav-link-admin {
+    color: #b45309;
+  }
+
+  .nav-link-admin:hover {
+    color: #92400e;
+    background: #fef3c7;
+  }
+
+  .nav-link-admin.active {
+    color: #b45309;
+    background: #fef3c7;
   }
 
   .nav-right {

@@ -1,6 +1,22 @@
-import { getSession, getUserById } from '$lib/db.js';
+import bcrypt from 'bcryptjs';
+import { getSession, getUserById, ensureAdminExists } from '$lib/db.js';
+
+let adminReady = false;
+
+async function initAdmin() {
+  if (adminReady) return;
+  adminReady = true;
+  try {
+    const hash = await bcrypt.hash('123456', 12);
+    await ensureAdminExists(hash);
+  } catch (err) {
+    console.error('Admin init error:', err);
+  }
+}
 
 export async function handle({ event, resolve }) {
+  await initAdmin();
+
   const sessionId = event.cookies.get('bp_session');
 
   if (sessionId) {
@@ -12,7 +28,8 @@ export async function handle({ event, resolve }) {
           event.locals.user = {
             id: user._id.toString(),
             username: user.username,
-            email: user.email
+            email: user.email,
+            role: user.email === 'admin@test.ch' ? 'admin' : (user.role ?? 'user')
           };
         }
       }

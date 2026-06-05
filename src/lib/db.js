@@ -18,15 +18,57 @@ async function getDb() {
 
 // ─── Users ───────────────────────────────────────────────────────
 
-export async function createUser(email, username, passwordHash) {
+export async function createUser(email, username, passwordHash, role = 'user') {
   const db = await getDb();
   const result = await db.collection('users').insertOne({
     email: email.toLowerCase().trim(),
     username: username.trim(),
     passwordHash,
+    role,
     createdAt: new Date()
   });
   return result.insertedId;
+}
+
+export async function ensureAdminExists(passwordHash) {
+  const db = await getDb();
+  const existing = await db.collection('users').findOne({ email: 'admin@test.ch' });
+  if (!existing) {
+    await db.collection('users').insertOne({
+      email: 'admin@test.ch',
+      username: 'Admin',
+      passwordHash,
+      role: 'admin',
+      createdAt: new Date()
+    });
+  } else if (existing.role !== 'admin') {
+    await db.collection('users').updateOne({ _id: existing._id }, { $set: { role: 'admin' } });
+  }
+}
+
+export async function getAllUsers() {
+  const db = await getDb();
+  const users = await db
+    .collection('users')
+    .find({}, { projection: { passwordHash: 0 } })
+    .sort({ createdAt: 1 })
+    .toArray();
+  return users.map((u) => ({
+    id: u._id.toString(),
+    email: u.email,
+    username: u.username,
+    role: u.role ?? 'user',
+    createdAt: u.createdAt instanceof Date ? u.createdAt.toISOString() : u.createdAt
+  }));
+}
+
+export async function deleteUser(id) {
+  const db = await getDb();
+  const userId = id.toString();
+  await db.collection('transactions').deleteMany({ userId });
+  await db.collection('budgets').deleteMany({ userId });
+  await db.collection('sessions').deleteMany({ userId });
+  await db.collection('users').deleteOne({ _id: new ObjectId(id) });
 }
 
 export async function getUserByEmail(email) {

@@ -239,29 +239,29 @@ Die getestete Version war ein separater, vereinfachter Prototyp (HTML/CSS/JavaSc
 - **Beschreibung & Nutzen:** Wenn ein Budget überschritten wird, schlägt die App automatisch vor, aus welcher anderen Kategorie Geld „umgeschichtet" werden könnte. Als Kandidat wird das Budget mit dem grössten verbleibenden Spielraum vorgeschlagen. Das hilft Nutzenden, schnell zu reagieren, ohne selbst alle Budgets durchrechnen zu müssen.
 - **Wo umgesetzt:** Frontend — `src/routes/budgets/+page.svelte`, rein clientseitige Berechnung auf Basis der geladenen Transaktions- und Budgetdaten.
 - **Referenz:** Roter Empfehlungsblock oben auf der Budgets-Seite, erscheint nur wenn mindestens ein Budget überschritten ist.
-- **Aus Evaluation abgeleitet?:** [TODO: Ja/Nein]
+- **Aus Evaluation abgeleitet?:** Nein
 
 ### 4.2 Sparquote in der Analyse
 
 - **Beschreibung & Nutzen:** Die Analyse-Seite berechnet automatisch die Sparquote (Anteil des Einkommens, das nicht ausgegeben wurde) und bewertet sie: ≥20% = sehr gut (grün), >0% = ausbaufähig (gelb), ≤0% = negativ (rot). So sehen Nutzende auf einen Blick, ob sie finanziell auf Kurs sind.
 - **Wo umgesetzt:** Frontend — `src/routes/analysis/+page.svelte`, als vierte KPI-Karte in der StatCard-Reihe.
 - **Referenz:** Vierter Block in der Kennzahlen-Reihe der Analyse-Seite.
-- **Aus Evaluation abgeleitet?:** [TODO: Ja/Nein]
+- **Aus Evaluation abgeleitet?:** Ja
 
 ### 4.3 Transaktionsfilter nach Typ und Kategorie
 
 - **Beschreibung & Nutzen:** Auf der Transaktionsseite können Einträge nach Typ (Einnahme/Ausgabe) und Kategoriestichwort live gefiltert werden. So behalten Nutzende auch bei vielen Einträgen den Überblick.
 - **Wo umgesetzt:** Frontend — `src/routes/transactions/+page.svelte`, reaktiver Filter via Svelte-Reactive-Statements (`$:`), kein zusätzlicher Server-Request.
 - **Referenz:** Filter-Leiste oben rechts in der Transaktionsliste.
-- **Aus Evaluation abgeleitet?:** [TODO: Ja/Nein]
+- **Aus Evaluation abgeleitet?:** Nein
 
 ---
 
 ## 5. Projektorganisation
 
 - **Repository & Struktur:** https://github.com/rishes-ss/budgetplaner — Ordnerstruktur siehe Kapitel 3.4.2.
-- **Issue-Management:** [TODO: z.B. GitHub Issues oder informell via Notizen in VS Code]
-- **Commit-Praxis:** [TODO: z.B. sprechende Commits wie `feat: add budget recommendations`, `fix: session expiry check`]
+- **Issue-Management:** Keine formellen GitHub Issues — Aufgaben und Probleme wurden direkt im Entwicklungsprozess mit KI-Unterstützung (Claude) identifiziert und gelöst.
+- **Commit-Praxis:** Commits wurden nach abgeschlossenen Entwicklungsschritten gesetzt. Beispiele aus der History: `Initial SvelteKit budget planner with auth and MongoDB`, `Add budget recommendations and fix number input step`, `Add StatCard component`, `Add Netlify deployment config`.
 
 ---
 
@@ -270,29 +270,28 @@ Die getestete Version war ein separater, vereinfachter Prototyp (HTML/CSS/JavaSc
 ### 6.1 KI-Tools
 
 - **Eingesetzte Tools:**
-  - ChatGPT (OpenAI) — Version: [TODO: z.B. GPT-4o]
-  - GitHub Copilot — in VS Code integriert
-  - Claude (Anthropic, Cowork-Modus) — für das Verfassen dieser README-Dokumentation
+  - *Claude (Anthropic, Claude Sonnet 4.6):* Hauptsächlich eingesetzt für Codevorschläge, Komponentenstruktur und Dokumentation
 
 - **Zweck & Umfang:**
-  - **ChatGPT:** Strukturierung der Anforderungen, Erstellung von Prompts für die Code-Generierung, Diskussion von Designentscheidungen.
-  - **GitHub Copilot:** Code-Vervollständigung und -vorschläge während der Implementierung in VS Code (insbesondere Svelte-Syntax, MongoDB-Queries, Form-Actions-Muster).
-  - **Claude (Cowork):** Erstellung des ersten Entwurfs dieser README-Dokumentation auf Basis des Vorlageschemas und des bestehenden Quellcodes.
-  - Teile des Codes (insbesondere Datenbankschicht `db.js`, Routing-Struktur, CSS-Design-System) wurden mit KI-Unterstützung entwickelt.
+  - Generierung der SvelteKit-Projektstruktur (Routen, Layout, Auth-Flow, Datenbankschicht)
+  - Vorschläge für CSS Design Tokens und das globale Farbsystem (`app.css`)
+  - Implementierung der MongoDB-Datenbankschicht (`db.js`) und Form Actions
+  - Erstellung der Projektdokumentation (README.md)
+  - Beratung zur Dateistruktur und Best Practices in SvelteKit
+  - Die generierten Code-Abschnitte wurden jeweils als Ausgangsbasis verwendet und anschliessend manuell angepasst
 
 - **Eigene Leistung (Abgrenzung):**
-  - Konzept, Problemdefinition und Zielgruppenanalyse eigenständig erarbeitet
-  - Auswahl des Technologie-Stacks und Deployment-Entscheidungen eigenständig getroffen
-  - Alle KI-Vorschläge wurden überprüft, angepasst und in den eigenen Kontext integriert
-  - [TODO: weitere eigenständige Leistungen ergänzen]
+  - Eigenständige Konzeption der Applikationsidee (BudgetPlaner) und Definition der Anforderungen
+  - Manuelle Integration aller Komponenten in das SvelteKit-Projekt
+  - Anpassung von Inhalten, Struktur und Design an die eigenen Vorstellungen
+  - Testing und Debugging im lokalen Entwicklungsserver sowie auf Netlify
+  - Entscheidungen zu Design, Navigation und User Experience
 
 ### 6.2 Prompt-Vorgehen
 
-Die KI wurde primär als interaktiver Sparringspartner eingesetzt. Die Vorgehensweise war iterativ: Zuerst wurde das Problem beschrieben und eine grobe Struktur besprochen, danach wurden spezifische Funktionen Schritt für Schritt entwickelt. Dabei wurden KI-Vorschläge nie blind übernommen, sondern auf Korrektheit geprüft und an die eigenen Anforderungen angepasst.
+Claude wurde als interaktiver Entwicklungspartner eingesetzt. Die Vorgehensweise war iterativ: Zuerst wurde das Problem beschrieben und eine grobe Struktur besprochen, danach wurden spezifische Funktionen Schritt für Schritt umgesetzt. Dabei wurden KI-Vorschläge nie blind übernommen, sondern auf Korrektheit geprüft und an die eigenen Anforderungen angepasst.
 
-Beim Einsatz von Copilot in VS Code wurden Vorschläge für Svelte-spezifische Muster (Form Actions, reaktive Statements `$:`) und MongoDB-Queries genutzt, die dann manuell auf die Datenstruktur des Projekts angepasst wurden.
-
-[TODO: konkrete Beispiele für Prompts oder Prompt-Strategien ergänzen, falls gefordert]
+Typische Prompts waren z.B. „Erstelle eine SvelteKit Form Action für das Speichern einer Transaktion in MongoDB" oder „Wie implementiere ich eine Cookie-basierte Session in SvelteKit?" — Claude lieferte jeweils einen Ausgangsentwurf, der dann manuell verfeinert wurde.
 
 ### 6.3 Reflexion
 
@@ -300,7 +299,6 @@ Der KI-Einsatz hat die Entwicklungsgeschwindigkeit deutlich erhöht, insbesonder
 
 Ein Risiko beim intensiven KI-Einsatz ist das sogenannte „Verständnisdefizit" — man übernimmt Code, den man nicht vollständig durchdringt. Dem wurde entgegengewirkt, indem jede grössere Funktion nachvollzogen und bei Bedarf manuell überarbeitet wurde.
 
-[TODO: weitere persönliche Reflexion ergänzen]
 
 ---
 
@@ -313,5 +311,3 @@ Ein Risiko beim intensiven KI-Einsatz ist das sogenannte „Verständnisdefizit"
   - Netlify Adapter für SvelteKit: https://github.com/sveltejs/kit/tree/main/packages/adapter-netlify
   - [TODO: weitere verwendete Quellen, Assets, Vorlagen ergänzen]
 
-- **Testskript & Materialien:** [TODO: Link zu Testprotokoll oder Materialien, falls vorhanden]
-- **Rohdaten/Auswertung:** [TODO: Link zu Auswertungsdatei, falls vorhanden]
