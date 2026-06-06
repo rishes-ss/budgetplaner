@@ -1,5 +1,10 @@
+import dns from 'node:dns';
 import { MongoClient, ObjectId } from 'mongodb';
 import { env } from '$env/dynamic/private';
+
+// Node.js picks up broken IPv6-only DNS servers on some Windows setups; force reliable resolvers.
+dns.setServers(['8.8.8.8', '8.8.4.4', '1.1.1.1']);
+
 const MONGODB_URI = env.MONGODB_URI;
 
 let clientPromise = null;
