@@ -45,7 +45,7 @@ BudgetPlaner ist eine webbasierte Applikation, mit der Nutzende ihre persönlich
   - **Transaktionen:** Einnahmen und Ausgaben erfassen (Titel, Betrag, Kategorie, Datum, Notiz), bearbeiten und löschen. Filterung nach Typ und Kategorie. Transaktionen können als wiederkehrend (monatlich, wöchentlich, jährlich) markiert werden.
   - **Budgets:** Monatsbudgets pro Kategorie anlegen oder anpassen. Automatische Empfehlungen bei Überschreitungen. Optionaler Rollover: ungenutztes Budget wird anteilig in den Folgemonat übertragen.
   - **Sparziele:** Sparziele mit Name, Zielbetrag und optionalem Zieldatum anlegen. Einzahlungen direkt auf der Seite buchen; Fortschrittsanzeige und Resttage-Anzeige.
-  - **Analyse:** Visualisierung der Ausgaben nach Kategorie (Balkendiagramm), Monatsvergleich Einnahmen vs. Ausgaben (gruppiertes Säulendiagramm, bis 12 Monate), Budget-vs.-Ist-Tabelle und Top-Ausgaben-Liste.
+  - **Analyse:** Visualisierung der Ausgaben nach Kategorie (Balkendiagramm), Donut-Diagramm zur prozentualen Verteilung der Ausgaben, Monatsvergleich Einnahmen vs. Ausgaben (gruppiertes Säulendiagramm, bis 12 Monate), Budget-vs.-Ist-Tabelle und Top-Ausgaben-Liste. Per Toggle zwischen **Gesamtansicht** (alle Monate) und **Monatsansicht** (ein wählbarer Monat) umschaltbar — alle Auswertungen passen sich dynamisch an.
   - **Authentifizierung:** Registrierung und Login mit sicherer Session-Verwaltung.
 
 - **Annahmen:** Es wird davon ausgegangen, dass Nutzende bereit sind, ihre Transaktionen manuell einzugeben. Eine Bankanbindung ist nicht vorgesehen.
@@ -114,6 +114,7 @@ Beschreibt die Gestaltung und Interaktion des umgesetzten Prototyps.
   - `/savings` – Sparziele (Anlegen, Einzahlen, Fortschritt)
   - `/analysis` – Analyse (Diagramme, Monatsvergleich, Tabellen)
   - `/login` / `/register` – Authentifizierung
+  - `/admin` – Admin-Bereich (nur für Benutzer mit Rolle `admin`): Benutzerübersicht und -löschung
 
 - **User Interface Design:**
 
@@ -125,25 +126,27 @@ Beschreibt die Gestaltung und Interaktion des umgesetzten Prototyps.
 
   ![Transaktionen](docs/transaktionen.png)
 
-  **Budgets** — Budgetkarten pro Kategorie mit Fortschrittsbalken und Farbkodierung; bei Überschreitungen erscheint automatisch ein Empfehlungsblock.
+  **Budgets** — Budgetkarten pro Kategorie mit Fortschrittsbalken und Farbkodierung; bei Überschreitungen erscheint automatisch ein Empfehlungsblock. Das Formular enthält eine Zusammenfassungsbox mit den Totalen aller Budgets (Budgets gesamt, Rollover gesamt, Ausgaben total, Anzahl überschrittener Budgets).
 
   ![Budgets](docs/budget.png)
 
-  **Analyse** — Ausgaben nach Kategorie (horizontales Balkendiagramm), Monatsvergleich Einnahmen vs. Ausgaben (gruppiertes Säulendiagramm, bis 12 Monate), Budget-vs.-Ist-Tabelle und Top-Ausgaben-Liste.
+  **Analyse** — Toggle oben rechts schaltet zwischen Gesamtansicht und Monatsansicht um. In der Monatsansicht erscheint ein Dropdown mit allen verfügbaren Monaten; alle Blöcke (KPI-Karten, Kategorien-Balken, Donut-Chart, Budget-Tabelle, Top-Ausgaben) filtern sich auf den gewählten Monat. Der Monatsvergleich bleibt immer sichtbar und hebt den aktuell gewählten Monat hervor. In der Gesamtansicht zeigen alle Blöcke die aggregierten Daten über alle Monate. Das Donut-Diagramm zeigt die prozentuale Ausgabenverteilung nach Kategorie für den gewählten Monat inkl. dem nicht ausgegebenen Einkommensanteil (grün).
 
   ![Analyse – Diagramme](docs/analyse1.png)
 
   ![Analyse – Tabelle & Top-Ausgaben](docs/analyse2.png)
 
-  **Sparziele** — Karten pro Ziel mit Fortschrittsbalken, Resttagen bis zum Zieldatum und direktem Einzahlungsformular.
+  **Sparziele** — Karten pro Ziel mit Fortschrittsbalken, Resttagen bis zum Zieldatum und direktem Einzahlungsformular. Oben vier Zusammenfassungskarten: Gesamt gespart, Gesamtziel, Noch offen, Ziele erreicht.
 
   (docs/sparziel.png)
 
 - **Designentscheidungen:**
   - Farbkodierung: Grün = positiv/im Rahmen, Orange = Warnung (80–99% des Budgets), Rot = Überschreitung (≥100%)
   - Währung durchgehend in CHF mit Schweizer Formatierung (`de-CH`)
-  - Responsives Layout (Grid bricht bei schmalen Bildschirmen auf eine Spalte um)
+  - Responsives Layout (Grid bricht bei schmalen Bildschirmen auf eine Spalte um; Hamburger-Menü auf mobilen Geräten)
   - Inline-Formvalidierung mit Fehlermeldungen direkt unter dem betroffenen Feld
+  - Dark/Light-Theme-Toggle in der Navigationsleiste (persistiert via `localStorage`)
+  - Kategorie-Autovervollständigung (`<datalist>`) in Transaktions- und Budgetformularen
 
 #### 3.4.2 Umsetzung (Technik)
 
@@ -271,7 +274,7 @@ Die getestete Version war ein separater, vereinfachter Prototyp (HTML/CSS/JavaSc
 - **Wo umgesetzt:** `src/routes/+page.server.js` (URL-Parameter `?month=YYYY-MM`, serverseitige Filterung), `src/routes/+page.svelte` (Monats-Picker-UI mit Prev/Next-Buttons).
 - **Referenz:** Monats-Picker rechts im Dashboard-Header.
 
-  (docs/monatsfilter.png)
+  ![Monatsfilter](docs/monatsfilter.png)
 
 - **Aus Evaluation abgeleitet?:** Nein
 
@@ -281,17 +284,17 @@ Die getestete Version war ein separater, vereinfachter Prototyp (HTML/CSS/JavaSc
 - **Wo umgesetzt:** `src/lib/db.js` (Felder `isRecurring`, `recurrenceInterval`, Funktion `expandTransactionsForMonth()`), `src/routes/transactions/+page.server.js` und `+page.svelte` (Toggle + Intervall-Selektor im Formular).
 - **Referenz:** Abschnitt „Wiederkehrend" im Transaktionsformular; ↻-Badge in der Transaktionsliste.
 
-  (docs/wiederkehrend-toggel.png)
+  ![Wiederkehrend Toggel](docs/wiederkehrend-toggel.png)
 
 - **Aus Evaluation abgeleitet?:** Nein
 
 ### 4.6 Sparziele
 
-- **Beschreibung & Nutzen:** Nutzende können konkrete Sparziele anlegen (z.B. „Urlaubskasse CHF 2'000 bis August"). Einzahlungen können direkt auf der Seite gebucht werden. Ein Fortschrittsbalken zeigt den aktuellen Stand, ein Badge zeigt die verbleibenden Tage bis zum Zieldatum. Eine Zusammenfassungszeile zeigt den aggregierten Fortschritt über alle Ziele.
+- **Beschreibung & Nutzen:** Nutzende können konkrete Sparziele anlegen (z.B. „Urlaubskasse CHF 2'000 bis August"). Einzahlungen können direkt auf der Seite gebucht werden. Ein Fortschrittsbalken zeigt den aktuellen Stand, ein Badge zeigt die verbleibenden Tage bis zum Zieldatum. Vier Zusammenfassungskarten zeigen den aggregierten Fortschritt über alle Ziele (Gesamt gespart, Gesamtziel, Noch offen, Anzahl erreichter Ziele).
 - **Wo umgesetzt:** `src/lib/db.js` (Collection `savings_goals`, CRUD-Funktionen), `src/routes/savings/+page.server.js`, `src/routes/savings/+page.svelte`.
 - **Referenz:** Navigationspunkt „Sparziele" in der Hauptnavigation, Route `/savings`.
 
-  (docs/sparziel.png)
+  ![sparziel](docs/sparziel.png)
 
 - **Aus Evaluation abgeleitet?:** Nein
 
@@ -313,6 +316,13 @@ Die getestete Version war ein separater, vereinfachter Prototyp (HTML/CSS/JavaSc
 
   (TODO: Screenshot Rollover-Budgetkarte einfügen)
 
+- **Aus Evaluation abgeleitet?:** Nein
+
+### 4.9 Gesamt- und Monatsansicht in der Analyse
+
+- **Beschreibung & Nutzen:** Die Analyse-Seite kann per Toggle zwischen zwei Modi umgeschaltet werden: **Gesamt** zeigt alle Daten über alle erfassten Monate aggregiert (wie bisher). **Pro Monat** blendet ein Dropdown mit allen verfügbaren Monaten ein — alle Auswertungsblöcke (KPI-Karten, Kategorien-Balkendiagramm, Donut-Chart, Budget-vs.-Ist-Tabelle, Top-Ausgaben) filtern sich sofort auf den gewählten Monat. Der Monatsvergleich-Chart bleibt in beiden Modi sichtbar und hebt den aktuell ausgewählten Monat visuell hervor. So können Nutzende nicht nur die Gesamtentwicklung, sondern auch einzelne Monate detailliert auswerten.
+- **Wo umgesetzt:** `src/routes/analysis/+page.svelte` — `viewMode`-State (`'total'` / `'monthly'`), reaktives `filteredTx` auf Basis des gewählten Monats; alle Berechnungen (KPIs, Kategorien, Budget-Vergleich, Top-Ausgaben) nutzen `filteredTx`. Der Monatsvergleich läuft weiterhin auf den ungefilterten Daten. Donut-Chart und dessen Label reagieren ebenfalls auf den gewählten Monat.
+- **Referenz:** Toggle-Schaltfläche „Gesamt / Pro Monat" oben rechts im Analyse-Header; Monatsdropdown erscheint nur im Pro-Monat-Modus.
 - **Aus Evaluation abgeleitet?:** Nein
 
 ---

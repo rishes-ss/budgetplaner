@@ -6,14 +6,29 @@
   $: tx = data.transactions;
   $: budgets = data.budgets;
 
-  $: income = tx.filter((t) => t.type === 'income').reduce((s, t) => s + t.amount, 0);
-  $: expenses = tx.filter((t) => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+  // ── View toggle ───────────────────────────────────────────────────
+  let viewMode = 'total';
+  $: currentYM = new Date().toISOString().slice(0, 7);
+  let selectedMonth = new Date().toISOString().slice(0, 7);
+
+  $: availableMonths = [...new Set(tx.map((t) => t.date.slice(0, 7)))].sort().reverse();
+
+  $: filteredTx = viewMode === 'monthly'
+    ? tx.filter((t) => t.date.slice(0, 7) === selectedMonth)
+    : tx;
+
+  $: subLabel = viewMode === 'monthly' ? fmtMonthFull(selectedMonth) : 'Gesamt';
+
+  // ── KPI ───────────────────────────────────────────────────────────
+  $: income = filteredTx.filter((t) => t.type === 'income').reduce((s, t) => s + t.amount, 0);
+  $: expenses = filteredTx.filter((t) => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
   $: balance = income - expenses;
   $: savingsRate = income > 0 ? Math.round(((income - expenses) / income) * 100) : 0;
 
+  // ── Category bar chart ────────────────────────────────────────────
   $: byCategory = (() => {
     const map = {};
-    tx.filter((t) => t.type === 'expense').forEach((t) => {
+    filteredTx.filter((t) => t.type === 'expense').forEach((t) => {
       map[t.category] = (map[t.category] || 0) + t.amount;
     });
     return Object.entries(map)
@@ -21,6 +36,7 @@
       .map(([category, amount]) => ({ category, amount }));
   })();
 
+  // ── Monthly comparison (always all data) ─────────────────────────
   $: byMonthCompare = (() => {
     const map = {};
     tx.forEach((t) => {
@@ -40,8 +56,9 @@
     ? Math.max(...byMonthCompare.map((m) => Math.max(m.income, m.expenses)))
     : 1;
 
+  // ── Budget vs actual ──────────────────────────────────────────────
   $: budgetComparison = budgets.map((b) => {
-    const spent = tx
+    const spent = filteredTx
       .filter((t) => t.type === 'expense' && t.category.toLowerCase() === b.category.toLowerCase())
       .reduce((s, t) => s + t.amount, 0);
     const effective = (b.limit || 0) + (b.rolloverAmount || 0);
@@ -49,8 +66,13 @@
     return { ...b, spent, pct, effective };
   });
 
-  // --- Donut chart ---
+  // ── Donut chart ───────────────────────────────────────────────────
   const PALETTE = ['#6366f1', '#f59e0b', '#ef4444', '#3b82f6', '#ec4899', '#8b5cf6', '#14b8a6', '#f97316'];
+
+  $: donutMonth = viewMode === 'monthly' ? selectedMonth : currentYM;
+  $: donutTx = tx.filter((t) => t.date.slice(0, 7) === donutMonth);
+  $: donutIncome = donutTx.filter((t) => t.type === 'income').reduce((s, t) => s + t.amount, 0);
+  $: donutExpenses = donutTx.filter((t) => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
 
   function polarToCartesian(cx, cy, r, angleDeg) {
     const rad = ((angleDeg - 90) * Math.PI) / 180;
@@ -67,21 +89,16 @@
     return `M${p1[0].toFixed(2)} ${p1[1].toFixed(2)} A${ro} ${ro} 0 ${large} 1 ${p2[0].toFixed(2)} ${p2[1].toFixed(2)} L${p3[0].toFixed(2)} ${p3[1].toFixed(2)} A${ri} ${ri} 0 ${large} 0 ${p4[0].toFixed(2)} ${p4[1].toFixed(2)}Z`;
   }
 
-  $: currentYM = new Date().toISOString().slice(0, 7);
-  $: currentMonthTx = tx.filter((t) => t.date.slice(0, 7) === currentYM);
-  $: currentIncome = currentMonthTx.filter((t) => t.type === 'income').reduce((s, t) => s + t.amount, 0);
-  $: currentExpenses = currentMonthTx.filter((t) => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
-
   $: pieSegments = (() => {
-    if (currentIncome === 0 && currentExpenses === 0) return [];
+    if (donutIncome === 0 && donutExpenses === 0) return [];
     const map = {};
-    currentMonthTx.filter((t) => t.type === 'expense').forEach((t) => {
+    donutTx.filter((t) => t.type === 'expense').forEach((t) => {
       map[t.category] = (map[t.category] || 0) + t.amount;
     });
     const items = Object.entries(map)
       .sort((a, b) => b[1] - a[1])
       .map(([cat, amt], i) => ({ category: cat, amount: amt, color: PALETTE[i % PALETTE.length] }));
-    const unspent = currentIncome - currentExpenses;
+    const unspent = donutIncome - donutExpenses;
     if (unspent > 0) items.push({ category: 'Nicht ausgegeben', amount: unspent, color: '#10b981' });
     const total = items.reduce((s, d) => s + d.amount, 0);
     if (total === 0) return [];
@@ -94,12 +111,9 @@
     });
   })();
 
-  $: currentMonthLabel = (() => {
-    const [y, m] = currentYM.split('-');
-    return new Date(parseInt(y), parseInt(m) - 1).toLocaleDateString('de-CH', { month: 'long', year: 'numeric' });
-  })();
+  $: donutLabel = fmtMonthFull(donutMonth);
 
-  // --- helpers ---
+  // ── Helpers ───────────────────────────────────────────────────────
   function chf(v) {
     return new Intl.NumberFormat('de-CH', { style: 'currency', currency: 'CHF' }).format(v);
   }
@@ -107,6 +121,11 @@
   function fmtMonth(ym) {
     const [y, m] = ym.split('-');
     return new Date(parseInt(y), parseInt(m) - 1).toLocaleDateString('de-CH', { month: 'short', year: '2-digit' });
+  }
+
+  function fmtMonthFull(ym) {
+    const [y, m] = ym.split('-');
+    return new Date(parseInt(y), parseInt(m) - 1).toLocaleDateString('de-CH', { month: 'long', year: 'numeric' });
   }
 
   function compact(v) {
@@ -129,17 +148,40 @@
 
 <div class="page">
   <div class="shell">
-    <h1 style="margin-bottom: 24px">Analyse</h1>
+
+    <!-- Header + Toggle -->
+    <div class="page-header">
+      <h1>Analyse</h1>
+      <div class="view-toggle">
+        <button
+          class="toggle-btn"
+          class:active={viewMode === 'total'}
+          on:click={() => (viewMode = 'total')}
+        >Gesamt</button>
+        <button
+          class="toggle-btn"
+          class:active={viewMode === 'monthly'}
+          on:click={() => (viewMode = 'monthly')}
+        >Pro Monat</button>
+        {#if viewMode === 'monthly'}
+          <select class="month-select" bind:value={selectedMonth}>
+            {#each availableMonths as m}
+              <option value={m}>{fmtMonthFull(m)}</option>
+            {/each}
+          </select>
+        {/if}
+      </div>
+    </div>
 
     <!-- KPI Row -->
     <div class="grid-4" style="margin-bottom: 28px">
-      <StatCard label="Einnahmen" value={chf(income)} sub="Gesamt" color="positive">
+      <StatCard label="Einnahmen" value={chf(income)} sub={subLabel} color="positive">
         <svelte:fragment slot="icon">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
         </svelte:fragment>
       </StatCard>
 
-      <StatCard label="Ausgaben" value={chf(expenses)} sub="Gesamt" color="negative">
+      <StatCard label="Ausgaben" value={chf(expenses)} sub={subLabel} color="negative">
         <svelte:fragment slot="icon">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/></svg>
         </svelte:fragment>
@@ -192,9 +234,9 @@
         {/if}
       </div>
 
-      <!-- Donut chart – current month -->
+      <!-- Donut chart -->
       <div class="card">
-        <h2 style="margin-bottom: 4px">Verteilung – {currentMonthLabel}</h2>
+        <h2 style="margin-bottom: 4px">Verteilung – {donutLabel}</h2>
         {#if pieSegments.length === 0}
           <p class="empty-state" style="margin-top:16px">Keine Daten für diesen Monat.</p>
         {:else}
@@ -223,7 +265,7 @@
         {/if}
       </div>
 
-      <!-- Monthly Comparison -->
+      <!-- Monthly Comparison (always all data) -->
       <div class="card full-width">
         <div class="chart-header">
           <h2>Monatsvergleich</h2>
@@ -239,7 +281,10 @@
             {#each byMonthCompare as item}
               {@const incomeH = Math.round((item.income / maxMonthVal) * 100)}
               {@const expenseH = Math.round((item.expenses / maxMonthVal) * 100)}
-              <div class="compare-col">
+              <div
+                class="compare-col"
+                class:highlighted={item.month === (viewMode === 'monthly' ? selectedMonth : currentYM)}
+              >
                 <div class="bar-values-row">
                   <span class="bv bv-income">{compact(item.income)}</span>
                   <span class="bv bv-expense">{compact(item.expenses)}</span>
@@ -307,11 +352,11 @@
       <!-- Top Transactions -->
       <div class="card">
         <h2 style="margin-bottom: 16px">Top Ausgaben</h2>
-        {#if tx.filter((t) => t.type === 'expense').length === 0}
+        {#if filteredTx.filter((t) => t.type === 'expense').length === 0}
           <p class="empty-state">Keine Ausgaben vorhanden.</p>
         {:else}
           <div class="top-list">
-            {#each tx.filter((t) => t.type === 'expense').sort((a, b) => b.amount - a.amount).slice(0, 8) as t}
+            {#each filteredTx.filter((t) => t.type === 'expense').sort((a, b) => b.amount - a.amount).slice(0, 8) as t}
               <div class="top-row">
                 <div class="top-info">
                   <span class="top-title">{t.title}</span>
@@ -329,6 +374,56 @@
 </div>
 
 <style>
+  .page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+
+  .page-header h1 { margin: 0; }
+
+  .view-toggle {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--surface-soft);
+    padding: 4px;
+    border-radius: var(--radius);
+  }
+
+  .toggle-btn {
+    padding: 6px 16px;
+    border-radius: calc(var(--radius) - 2px);
+    border: none;
+    background: transparent;
+    color: var(--text-2);
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+  }
+
+  .toggle-btn.active {
+    background: var(--surface);
+    color: var(--text-1);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+  }
+
+  .month-select {
+    margin-left: 4px;
+    padding: 6px 10px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-soft);
+    background: var(--surface);
+    color: var(--text-1);
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
   .analysis-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -507,6 +602,15 @@
     align-items: center;
     gap: 3px;
     min-width: 0;
+    border-radius: var(--radius-sm);
+    padding: 4px 2px;
+    transition: background 0.15s;
+  }
+
+  .compare-col.highlighted {
+    background: var(--surface-soft);
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
   }
 
   .bar-values-row {
@@ -664,6 +768,7 @@
   }
 
   @media (max-width: 600px) {
+    .page-header { flex-direction: column; align-items: flex-start; }
     .bar-row { grid-template-columns: 100px 1fr 90px; }
 
     .bt-header,
