@@ -329,6 +329,17 @@ Die getestete Version war ein separater, vereinfachter Prototyp (HTML/CSS/JavaSc
 
 - **Aus Evaluation abgeleitet?:** Nein
 
+### 4.10 Admin-Bereich (Benutzerverwaltung)
+
+- **Beschreibung & Nutzen:** Benutzer mit der Rolle `admin` erhalten Zugang zu einem geschützten Verwaltungsbereich unter `/admin`. Dort wird eine Tabelle aller registrierten Nutzer angezeigt (Benutzername, E-Mail, Rolle, Registrierungsdatum). Admins können einzelne Benutzerkonten mitsamt allen zugehörigen Daten löschen — ein Bestätigungsdialog verhindert versehentliche Löschungen. Admin-Konten sind als „Geschützt" markiert und können nicht gelöscht werden; ein Admin kann sich zudem nicht selbst löschen. Nicht angemeldete Nutzer oder Nutzer ohne Admin-Rolle werden automatisch weitergeleitet.
+- **Wo umgesetzt:** `src/routes/admin/+page.server.js` (Zugriffsprüfung via `locals.user.role`, Form Action `deleteUser`), `src/routes/admin/+page.svelte` (Benutzertabelle mit Avatar-Badge, Rollen-Chip, Lösch-Button).
+- **Referenz:** Route `/admin`; in der Navigation nur für eingeloggte Admin-Nutzer sichtbar.
+
+![admin](docs/admin.png)
+
+
+- **Aus Evaluation abgeleitet?:** Nein
+
 ---
 
 ## 5. Projektorganisation
