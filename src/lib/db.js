@@ -1,5 +1,6 @@
 import { MongoClient, ObjectId } from 'mongodb';
-import { MONGODB_URI } from '$env/static/private';
+import { env } from '$env/dynamic/private';
+const MONGODB_URI = env.MONGODB_URI;
 
 let clientPromise = null;
 

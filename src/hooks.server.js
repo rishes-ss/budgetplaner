@@ -1,6 +1,7 @@
 import bcrypt from 'bcryptjs';
 import { getSession, getUserById, ensureAdminExists } from '$lib/db.js';
-import { ADMIN_PASSWORD } from '$env/static/private';
+import { env } from '$env/dynamic/private';
+const ADMIN_PASSWORD = env.ADMIN_PASSWORD;
 
 let adminReady = false;
 
