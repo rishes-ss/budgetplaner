@@ -1,5 +1,6 @@
 <script>
   import StatCard from '$lib/components/StatCard.svelte';
+  import { expandTransactionsForMonth, getMonthsInRange } from '$lib/utils.js';
 
   export let data;
 
@@ -8,14 +9,19 @@
 
   // ── View toggle ───────────────────────────────────────────────────
   let viewMode = 'total';
-  $: currentYM = new Date().toISOString().slice(0, 7);
+  const currentYM = new Date().toISOString().slice(0, 7);
   let selectedMonth = new Date().toISOString().slice(0, 7);
 
-  $: availableMonths = [...new Set(tx.map((t) => t.date.slice(0, 7)))].sort().reverse();
+  // Earliest transaction month (recurring start date)
+  $: minTxMonth = tx.length > 0 ? tx.map((t) => t.date.slice(0, 7)).sort()[0] : currentYM;
 
+  // All months from earliest tx to now (for dropdown)
+  $: availableMonths = getMonthsInRange(minTxMonth, currentYM).reverse();
+
+  // Expand recurring transactions for the selected/current context
   $: filteredTx = viewMode === 'monthly'
-    ? tx.filter((t) => t.date.slice(0, 7) === selectedMonth)
-    : tx;
+    ? expandTransactionsForMonth(tx, selectedMonth)
+    : getMonthsInRange(minTxMonth, currentYM).flatMap((m) => expandTransactionsForMonth(tx, m));
 
   $: subLabel = viewMode === 'monthly' ? fmtMonthFull(selectedMonth) : 'Gesamt';
 
@@ -36,19 +42,15 @@
       .map(([category, amount]) => ({ category, amount }));
   })();
 
-  // ── Monthly comparison (always all data) ─────────────────────────
+  // ── Monthly comparison (expand per month) ─────────────────────────
   $: byMonthCompare = (() => {
-    const map = {};
-    tx.forEach((t) => {
-      const key = t.date.slice(0, 7);
-      if (!map[key]) map[key] = { income: 0, expenses: 0 };
-      if (t.type === 'income') map[key].income += t.amount;
-      else map[key].expenses += t.amount;
+    const months = getMonthsInRange(minTxMonth, currentYM).slice(-12);
+    return months.map((month) => {
+      const expanded = expandTransactionsForMonth(tx, month);
+      const inc = expanded.filter((t) => t.type === 'income').reduce((s, t) => s + t.amount, 0);
+      const exp = expanded.filter((t) => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+      return { month, income: inc, expenses: exp, balance: inc - exp };
     });
-    return Object.entries(map)
-      .sort((a, b) => a[0].localeCompare(b[0]))
-      .slice(-12)
-      .map(([month, d]) => ({ month, income: d.income, expenses: d.expenses, balance: d.income - d.expenses }));
   })();
 
   $: maxCat = byCategory.length > 0 ? byCategory[0].amount : 1;
@@ -70,7 +72,7 @@
   const PALETTE = ['#6366f1', '#f59e0b', '#ef4444', '#3b82f6', '#ec4899', '#8b5cf6', '#14b8a6', '#f97316'];
 
   $: donutMonth = viewMode === 'monthly' ? selectedMonth : currentYM;
-  $: donutTx = tx.filter((t) => t.date.slice(0, 7) === donutMonth);
+  $: donutTx = expandTransactionsForMonth(tx, donutMonth);
   $: donutIncome = donutTx.filter((t) => t.type === 'income').reduce((s, t) => s + t.amount, 0);
   $: donutExpenses = donutTx.filter((t) => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
 
