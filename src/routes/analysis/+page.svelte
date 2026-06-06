@@ -408,7 +408,7 @@
 
   .toggle-btn.active {
     background: var(--surface);
-    color: var(--text-1);
+    color: var(--text);
     box-shadow: 0 1px 3px rgba(0,0,0,0.12);
   }
 
@@ -418,7 +418,7 @@
     border-radius: var(--radius-sm);
     border: 1px solid var(--border-soft);
     background: var(--surface);
-    color: var(--text-1);
+    color: var(--text);
     font-size: 0.85rem;
     font-weight: 600;
     cursor: pointer;
@@ -488,7 +488,7 @@
     font-weight: 700;
     text-align: right;
     white-space: nowrap;
-    color: var(--text-1);
+    color: var(--text);
   }
 
   /* ── Donut chart ── */
@@ -520,7 +520,7 @@
   .donut-center-line2 {
     font-size: 18px;
     font-weight: 700;
-    fill: var(--text-1);
+    fill: var(--text);
     font-family: inherit;
   }
 

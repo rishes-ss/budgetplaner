@@ -1,5 +1,5 @@
 import { fail, redirect } from '@sveltejs/kit';
-import { getBudgets, upsertBudget, deleteBudget, getTransactions, applyRolloversIfNeeded } from '$lib/db.js';
+import { getBudgets, upsertBudget, deleteBudget, getTransactions, applyRolloversIfNeeded, expandTransactionsForMonth } from '$lib/db.js';
 
 function monthStr(d) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
@@ -19,10 +19,12 @@ export async function load({ locals }) {
 
   await applyRolloversIfNeeded(locals.user.id, current, previous);
 
-  const [budgets, transactions] = await Promise.all([
+  const [budgets, allTransactions] = await Promise.all([
     getBudgets(locals.user.id),
     getTransactions(locals.user.id)
   ]);
+
+  const transactions = expandTransactionsForMonth(allTransactions, current);
 
   return { budgets, transactions };
 }

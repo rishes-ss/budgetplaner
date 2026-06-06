@@ -13,7 +13,6 @@
 4. [Erweiterungen](#4-erweiterungen)
 5. [Projektorganisation](#5-projektorganisation)
 6. [KI-Deklaration](#6-ki-deklaration)
-7. [Anhang](#7-anhang)
 
 
 <!-- WICHTIG: DIE KAPITELSTRUKTUR DARF NICHT VERÄNDERT WERDEN! -->
@@ -40,7 +39,7 @@ Viele Studierende und junge Erwachsene haben keinen guten Überblick über ihre 
 BudgetPlaner ist eine webbasierte Applikation, mit der Nutzende ihre persönlichen Finanzen übersichtlich verwalten können. Nach der Registrierung können Transaktionen erfasst, Budgets gesetzt und Ausgabenmuster analysiert werden.
 
 - **Kernfunktionalität:**
-  - **Dashboard:** Übersicht über Gesamteinnahmen, -ausgaben, Saldo und Budgetstatus auf einen Blick — mit Monatsfilter (Pfeiltasten) um beliebige Monate zu vergleichen.
+  - **Dashboard:** Übersicht über Gesamteinnahmen, -ausgaben, Saldo und Budgetstatus auf einen Blick — mit Monatsfilter (Pfeiltasten), um beliebige Monate zu vergleichen.
   - **Transaktionen:** Einnahmen und Ausgaben erfassen (Titel, Betrag, Kategorie, Datum, Notiz), bearbeiten und löschen. Filterung nach Typ und Kategorie. Transaktionen können als wiederkehrend (monatlich, wöchentlich, jährlich) markiert werden.
   - **Budgets:** Monatsbudgets pro Kategorie anlegen oder anpassen. Automatische Empfehlungen bei Überschreitungen. Optionaler Rollover: ungenutztes Budget wird anteilig in den Folgemonat übertragen.
   - **Sparziele:** Sparziele mit Name, Zielbetrag und optionalem Zieldatum anlegen. Einzahlungen direkt auf der Seite buchen; Fortschrittsanzeige und Resttage-Anzeige.
@@ -135,7 +134,7 @@ Beschreibt die Gestaltung und Interaktion des umgesetzten Prototyps.
 
   ![Analyse – Tabelle](docs/analyse2.png)
 
-  ![top ausgaben](docs/analyse3.png)
+  ![Top Ausgaben](docs/analyse3.png)
 
   **Sparziele** — Karten pro Ziel mit Fortschrittsbalken, Resttagen bis zum Zieldatum und direktem Einzahlungsformular. Oben vier Zusammenfassungskarten: Gesamt gespart, Gesamtziel, Noch offen, Ziele erreicht.
 
@@ -183,7 +182,8 @@ Fasst die technische Realisierung zusammen.
   │   ├── analysis/                 # Analyse & Diagramme (inkl. Monatsvergleich)
   │   ├── login/                    # Login
   │   ├── register/                 # Registrierung
-  │   └── logout/                   # Logout-Endpoint
+  │   ├── logout/                   # Logout-Endpoint
+  │   └── admin/                    # Admin-Bereich (Benutzerverwaltung)
   ├── hooks.server.js               # Session-Middleware (lädt User aus DB)
   └── app.css                       # Globale Styles (CSS-Variablen, Design-System)
   ```
@@ -325,7 +325,7 @@ Die getestete Version war ein separater, vereinfachter Prototyp (HTML/CSS/JavaSc
 - **Wo umgesetzt:** `src/routes/analysis/+page.svelte` — `viewMode`-State (`'total'` / `'monthly'`), reaktives `filteredTx` auf Basis des gewählten Monats; alle Berechnungen (KPIs, Kategorien, Budget-Vergleich, Top-Ausgaben) nutzen `filteredTx`. Der Monatsvergleich läuft weiterhin auf den ungefilterten Daten. Donut-Chart und dessen Label reagieren ebenfalls auf den gewählten Monat.
 - **Referenz:** Toggle-Schaltfläche „Gesamt / Pro Monat" oben rechts im Analyse-Header; Monatsdropdown erscheint nur im Pro-Monat-Modus.
 
-![monatsansicht analyse](<docs/analyse monatsansicht.png>)
+![Monatsansicht Analyse](docs/analyse-monatsansicht.png)
 
 - **Aus Evaluation abgeleitet?:** Nein
 

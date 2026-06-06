@@ -96,7 +96,7 @@
   </header>
 
   {#if menuOpen}
-    <button class="nav-overlay" on:click={() => (menuOpen = false)} aria-label="Menü schließen"></button>
+    <button class="nav-overlay" on:click={() => (menuOpen = false)} aria-label="Menü schliessen"></button>
   {/if}
 
   <main>

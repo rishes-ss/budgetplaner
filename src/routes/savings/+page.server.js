@@ -63,7 +63,7 @@ export const actions = {
     if (!targetAmount || targetAmount <= 0) errors.targetAmount = 'Zielbetrag muss grösser als 0 sein.';
 
     if (Object.keys(errors).length > 0) {
-      return fail(400, { errors, action: 'update' });
+      return fail(400, { errors, values: { name, targetAmount, deadline }, action: 'update' });
     }
 
     await updateSavingsGoal(id, locals.user.id, { name, targetAmount, deadline: deadline || null });

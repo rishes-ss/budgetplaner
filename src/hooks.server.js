@@ -12,6 +12,7 @@ async function initAdmin() {
     await ensureAdminExists(hash);
   } catch (err) {
     console.error('Admin init error:', err);
+    adminReady = false;
   }
 }
 
