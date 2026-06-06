@@ -12,7 +12,10 @@ let clientPromise = null;
 function getClient() {
   if (!clientPromise) {
     const client = new MongoClient(MONGODB_URI);
-    clientPromise = client.connect();
+    clientPromise = client.connect().catch((err) => {
+      clientPromise = null;
+      throw err;
+    });
   }
   return clientPromise;
 }
