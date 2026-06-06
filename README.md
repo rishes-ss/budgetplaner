@@ -15,7 +15,6 @@
 6. [KI-Deklaration](#6-ki-deklaration)
 7. [Anhang](#7-anhang)
 
-> **Hinweis:** Massgeblich sind die im **Unterricht** und auf **Moodle** kommunizierten Anforderungen.
 
 <!-- WICHTIG: DIE KAPITELSTRUKTUR DARF NICHT VERÄNDERT WERDEN! -->
 
@@ -134,7 +133,9 @@ Beschreibt die Gestaltung und Interaktion des umgesetzten Prototyps.
 
   ![Analyse – Diagramme](docs/analyse1.png)
 
-  ![Analyse – Tabelle & Top-Ausgaben](docs/analyse2.png)
+  ![Analyse – Tabelle](docs/analyse2.png)
+
+  ![top ausgaben](docs/analyse3.png)
 
   **Sparziele** — Karten pro Ziel mit Fortschrittsbalken, Resttagen bis zum Zieldatum und direktem Einzahlungsformular. Oben vier Zusammenfassungskarten: Gesamt gespart, Gesamtziel, Noch offen, Ziele erreicht.
 
