@@ -84,7 +84,7 @@ Die Durchführung erfolgt phasenbasiert; dokumentiert sind die wichtigsten Ergeb
 
 ### 3.3 Decide
 
-- **Gewählte Variante & Begründung:** Gewählt wurde die Dashboard-zentrierte Variante mit kategorienbased Budgets (Plan-Tab). Die Sparziele-Variante wurde als zu komplex für einen ersten Prototyp eingestuft. Der Budgetrechner-Ansatz wurde in vereinfachter Form ins Dashboard integriert (Saldo-Karte). Entscheidend war, dass Nutzende auf der Startseite sofort den Überblick haben, ohne erst navigieren zu müssen.
+- **Gewählte Variante & Begründung:** Gewählt wurde die Dashboard-zentrierte Variante mit kategorienbased Budgets (Plan-Tab). Die Sparziele-Variante wurde als zu komplex für den initialen Prototyp eingestuft, aber später als Erweiterung umgesetzt (siehe Kapitel 4.6). Der Budgetrechner-Ansatz wurde in vereinfachter Form ins Dashboard integriert (Saldo-Karte). Entscheidend war, dass Nutzende auf der Startseite sofort den Überblick haben, ohne erst navigieren zu müssen.
 
 - **End-to-End-Ablauf:** Der typische Nutzerfluss beginnt mit der Registrierung (`/register`), führt über das Dashboard zur Transaktionserfassung (`/transactions`), dann zur Budgetverwaltung (`/budgets`) und schliesslich zur Analyse-Seite (`/analysis`) für die Auswertung. Von überall aus ist die Navigation persistent zugänglich.
 
@@ -137,7 +137,7 @@ Beschreibt die Gestaltung und Interaktion des umgesetzten Prototyps.
 
   **Sparziele** — Karten pro Ziel mit Fortschrittsbalken, Resttagen bis zum Zieldatum und direktem Einzahlungsformular.
 
-  (TODO: Screenshot Sparziele-Seite einfügen)
+  (docs/sparziel.png)
 
 - **Designentscheidungen:**
   - Farbkodierung: Grün = positiv/im Rahmen, Orange = Warnung (80–99% des Budgets), Rot = Überschreitung (≥100%)
@@ -271,7 +271,7 @@ Die getestete Version war ein separater, vereinfachter Prototyp (HTML/CSS/JavaSc
 - **Wo umgesetzt:** `src/routes/+page.server.js` (URL-Parameter `?month=YYYY-MM`, serverseitige Filterung), `src/routes/+page.svelte` (Monats-Picker-UI mit Prev/Next-Buttons).
 - **Referenz:** Monats-Picker rechts im Dashboard-Header.
 
-  (TODO: Screenshot Monatsfilter einfügen)
+  (docs/monatsfilter.png)
 
 - **Aus Evaluation abgeleitet?:** Nein
 
@@ -281,7 +281,7 @@ Die getestete Version war ein separater, vereinfachter Prototyp (HTML/CSS/JavaSc
 - **Wo umgesetzt:** `src/lib/db.js` (Felder `isRecurring`, `recurrenceInterval`, Funktion `expandTransactionsForMonth()`), `src/routes/transactions/+page.server.js` und `+page.svelte` (Toggle + Intervall-Selektor im Formular).
 - **Referenz:** Abschnitt „Wiederkehrend" im Transaktionsformular; ↻-Badge in der Transaktionsliste.
 
-  (TODO: Screenshot Wiederkehrend-Toggle einfügen)
+  (docs/wiederkehrend-toggel.png)
 
 - **Aus Evaluation abgeleitet?:** Nein
 
@@ -291,7 +291,7 @@ Die getestete Version war ein separater, vereinfachter Prototyp (HTML/CSS/JavaSc
 - **Wo umgesetzt:** `src/lib/db.js` (Collection `savings_goals`, CRUD-Funktionen), `src/routes/savings/+page.server.js`, `src/routes/savings/+page.svelte`.
 - **Referenz:** Navigationspunkt „Sparziele" in der Hauptnavigation, Route `/savings`.
 
-  (TODO: Screenshot Sparziele-Seite einfügen)
+  (docs/sparziel.png)
 
 - **Aus Evaluation abgeleitet?:** Nein
 
