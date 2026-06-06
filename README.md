@@ -138,7 +138,7 @@ Beschreibt die Gestaltung und Interaktion des umgesetzten Prototyps.
 
   **Sparziele** — Karten pro Ziel mit Fortschrittsbalken, Resttagen bis zum Zieldatum und direktem Einzahlungsformular. Oben vier Zusammenfassungskarten: Gesamt gespart, Gesamtziel, Noch offen, Ziele erreicht.
 
-  (docs/sparziel.png)
+  ![sparziel](docs/sparziel.png)
 
 - **Designentscheidungen:**
   - Farbkodierung: Grün = positiv/im Rahmen, Orange = Warnung (80–99% des Budgets), Rot = Überschreitung (≥100%)
@@ -304,7 +304,7 @@ Die getestete Version war ein separater, vereinfachter Prototyp (HTML/CSS/JavaSc
 - **Wo umgesetzt:** `src/routes/analysis/+page.svelte` — reaktive Berechnung `byMonthCompare`, gruppiertes CSS-Balkendiagramm ohne externe Chart-Bibliothek.
 - **Referenz:** „Monatsvergleich"-Panel auf der Analyse-Seite (oben rechts).
 
-  (TODO: Screenshot Monatsvergleich-Diagramm einfügen)
+  ![monatsvergleich](docs/monatsvergleich.png)
 
 - **Aus Evaluation abgeleitet?:** Nein
 
@@ -314,7 +314,7 @@ Die getestete Version war ein separater, vereinfachter Prototyp (HTML/CSS/JavaSc
 - **Wo umgesetzt:** `src/lib/db.js` (Felder `rolloverEnabled`, `rolloverPercent`, `rolloverAmount`, `rolloverAppliedMonth`; Funktion `applyRolloversIfNeeded()`), `src/routes/budgets/+page.server.js` (Rollover-Berechnung beim Page-Load), `src/routes/budgets/+page.svelte` (Toggle + Prozent-Slider im Formular, Rollover-Chip in Budgetkarten).
 - **Referenz:** Abschnitt „Budget-Rollover aktivieren" im Budgetformular; blauer „+X CHF Rollover"-Chip auf Budgetkarten.
 
-  (TODO: Screenshot Rollover-Budgetkarte einfügen)
+  ![rollover](docs/rollover.png)
 
 - **Aus Evaluation abgeleitet?:** Nein
 
@@ -323,6 +323,9 @@ Die getestete Version war ein separater, vereinfachter Prototyp (HTML/CSS/JavaSc
 - **Beschreibung & Nutzen:** Die Analyse-Seite kann per Toggle zwischen zwei Modi umgeschaltet werden: **Gesamt** zeigt alle Daten über alle erfassten Monate aggregiert (wie bisher). **Pro Monat** blendet ein Dropdown mit allen verfügbaren Monaten ein — alle Auswertungsblöcke (KPI-Karten, Kategorien-Balkendiagramm, Donut-Chart, Budget-vs.-Ist-Tabelle, Top-Ausgaben) filtern sich sofort auf den gewählten Monat. Der Monatsvergleich-Chart bleibt in beiden Modi sichtbar und hebt den aktuell ausgewählten Monat visuell hervor. So können Nutzende nicht nur die Gesamtentwicklung, sondern auch einzelne Monate detailliert auswerten.
 - **Wo umgesetzt:** `src/routes/analysis/+page.svelte` — `viewMode`-State (`'total'` / `'monthly'`), reaktives `filteredTx` auf Basis des gewählten Monats; alle Berechnungen (KPIs, Kategorien, Budget-Vergleich, Top-Ausgaben) nutzen `filteredTx`. Der Monatsvergleich läuft weiterhin auf den ungefilterten Daten. Donut-Chart und dessen Label reagieren ebenfalls auf den gewählten Monat.
 - **Referenz:** Toggle-Schaltfläche „Gesamt / Pro Monat" oben rechts im Analyse-Header; Monatsdropdown erscheint nur im Pro-Monat-Modus.
+
+![monatsansicht analyse](<docs/analyse monatsansicht.png>)
+
 - **Aus Evaluation abgeleitet?:** Nein
 
 ---
