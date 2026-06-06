@@ -1,5 +1,6 @@
 import bcrypt from 'bcryptjs';
 import { getSession, getUserById, ensureAdminExists } from '$lib/db.js';
+import { ADMIN_PASSWORD } from '$env/static/private';
 
 let adminReady = false;
 
@@ -7,7 +8,7 @@ async function initAdmin() {
   if (adminReady) return;
   adminReady = true;
   try {
-    const hash = await bcrypt.hash('123456', 12);
+    const hash = await bcrypt.hash(ADMIN_PASSWORD, 12);
     await ensureAdminExists(hash);
   } catch (err) {
     console.error('Admin init error:', err);
@@ -29,7 +30,7 @@ export async function handle({ event, resolve }) {
             id: user._id.toString(),
             username: user.username,
             email: user.email,
-            role: user.email === 'admin@test.ch' ? 'admin' : (user.role ?? 'user')
+            role: user.role ?? 'user'
           };
         }
       }

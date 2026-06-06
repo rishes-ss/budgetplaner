@@ -83,7 +83,7 @@ Die Durchführung erfolgt phasenbasiert; dokumentiert sind die wichtigsten Ergeb
 
 ### 3.3 Decide
 
-- **Gewählte Variante & Begründung:** Gewählt wurde die Dashboard-zentrierte Variante mit kategorienbased Budgets (Plan-Tab). Die Sparziele-Variante wurde als zu komplex für den initialen Prototyp eingestuft, aber später als Erweiterung umgesetzt (siehe Kapitel 4.6). Der Budgetrechner-Ansatz wurde in vereinfachter Form ins Dashboard integriert (Saldo-Karte). Entscheidend war, dass Nutzende auf der Startseite sofort den Überblick haben, ohne erst navigieren zu müssen.
+- **Gewählte Variante & Begründung:** Gewählt wurde die Dashboard-zentrierte Variante mit kategorienbasierten Budgets (Plan-Tab). Die Sparziele-Variante wurde als zu komplex für den initialen Prototyp eingestuft, aber später als Erweiterung umgesetzt (siehe Kapitel 4.6). Der Budgetrechner-Ansatz wurde in vereinfachter Form ins Dashboard integriert (Saldo-Karte). Entscheidend war, dass Nutzende auf der Startseite sofort den Überblick haben, ohne erst navigieren zu müssen.
 
 - **End-to-End-Ablauf:** Der typische Nutzerfluss beginnt mit der Registrierung (`/register`), führt über das Dashboard zur Transaktionserfassung (`/transactions`), dann zur Budgetverwaltung (`/budgets`) und schliesslich zur Analyse-Seite (`/analysis`) für die Auswertung. Von überall aus ist die Navigation persistent zugänglich.
 
@@ -260,7 +260,7 @@ Die getestete Version war ein separater, vereinfachter Prototyp (HTML/CSS/JavaSc
 - **Beschreibung & Nutzen:** Die Analyse-Seite berechnet automatisch die Sparquote (Anteil des Einkommens, das nicht ausgegeben wurde) und bewertet sie: ≥20% = sehr gut (grün), >0% = ausbaufähig (gelb), ≤0% = negativ (rot). So sehen Nutzende auf einen Blick, ob sie finanziell auf Kurs sind.
 - **Wo umgesetzt:** Frontend — `src/routes/analysis/+page.svelte`, als vierte KPI-Karte in der StatCard-Reihe.
 - **Referenz:** Vierter Block in der Kennzahlen-Reihe der Analyse-Seite.
-- **Aus Evaluation abgeleitet?:** Ja
+- **Aus Evaluation abgeleitet?:** Nein
 
 ### 4.3 Transaktionsfilter nach Typ und Kategorie
 
@@ -285,7 +285,7 @@ Die getestete Version war ein separater, vereinfachter Prototyp (HTML/CSS/JavaSc
 - **Wo umgesetzt:** `src/lib/db.js` (Felder `isRecurring`, `recurrenceInterval`, Funktion `expandTransactionsForMonth()`), `src/routes/transactions/+page.server.js` und `+page.svelte` (Toggle + Intervall-Selektor im Formular).
 - **Referenz:** Abschnitt „Wiederkehrend" im Transaktionsformular; ↻-Badge in der Transaktionsliste.
 
-  ![Wiederkehrend Toggel](docs/wiederkehrend-toggel.png)
+  ![Wiederkehrend Toggle](docs/wiederkehrend-toggel.png)
 
 - **Aus Evaluation abgeleitet?:** Nein
 
@@ -374,14 +374,4 @@ Der KI-Einsatz hat die Entwicklungsgeschwindigkeit deutlich erhöht, insbesonder
 Ein Risiko beim intensiven KI-Einsatz ist das sogenannte „Verständnisdefizit" — man übernimmt Code, den man nicht vollständig durchdringt. Dem wurde entgegengewirkt, indem jede grössere Funktion nachvollzogen und bei Bedarf manuell überarbeitet wurde.
 
 
----
-
-## 7. Anhang
-
-- **Quellen:**
-  - SvelteKit Dokumentation: https://kit.svelte.dev/docs
-  - MongoDB Node.js Driver: https://www.mongodb.com/docs/drivers/node/current/
-  - bcryptjs: https://github.com/dcodeIO/bcrypt.js
-  - Netlify Adapter für SvelteKit: https://github.com/sveltejs/kit/tree/main/packages/adapter-netlify
-  - [TODO: weitere verwendete Quellen, Assets, Vorlagen ergänzen]
 

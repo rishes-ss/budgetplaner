@@ -36,6 +36,7 @@ export const actions = {
     cookies.set('bp_session', sessionId, {
       path: '/',
       httpOnly: true,
+      secure: true,
       sameSite: 'lax',
       maxAge: 60 * 60 * 24 * 30
     });
